@@ -94,8 +94,102 @@ function buildUserPrompt(query) {
   return `请根据以下描述生成一个完整的 HTML 页面：\n\n${query}`;
 }
 
-/* ===== Step 5: LLM 流式调用 ===== */
-// streamGenerate(query, onChunk)
+/* ===== LLM 流式调用 ===== */
+
+async function streamGenerate(query, onChunk) {
+  const config = getConfig();
+
+  if (!config.apiKey) {
+    throw new Error('请先在设置中配置 API Key');
+  }
+
+  const url = `${config.baseUrl.replace(/\/+$/, '')}/chat/completions`;
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: buildUserPrompt(query) }
+        ],
+        stream: true
+      })
+    });
+  } catch (err) {
+    if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+      throw new Error('网络请求失败，可能是 CORS 限制或 Base URL 不可达。请检查设置中的 Base URL 是否正确，且该服务支持浏览器跨域访问。');
+    }
+    throw new Error(`网络请求失败：${err.message}`);
+  }
+
+  if (!response.ok) {
+    let errorMsg = `API 返回错误 ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      if (errorBody.error?.message) {
+        errorMsg = `API 错误：${errorBody.error.message}`;
+      }
+    } catch (_) {
+      // 响应体非 JSON，使用状态码
+    }
+    throw new Error(errorMsg);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let inCodeBlock = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+      const data = trimmed.slice(6);
+      if (data === '[DONE]') return;
+
+      try {
+        const json = JSON.parse(data);
+        const content = json.choices?.[0]?.delta?.content;
+        if (!content) continue;
+
+        // 过滤 markdown 代码块标记
+        let cleaned = content;
+        if (cleaned.includes('```')) {
+          if (cleaned.includes('```html')) {
+            cleaned = cleaned.replace(/```html\n?/g, '');
+            inCodeBlock = true;
+          }
+          if (cleaned.includes('```')) {
+            cleaned = cleaned.replace(/```/g, '');
+            inCodeBlock = false;
+          }
+        }
+
+        if (cleaned) {
+          onChunk(cleaned);
+        }
+      } catch (_) {
+        // JSON 解析失败，跳过不完整的 chunk
+      }
+    }
+  }
+}
 
 /* ===== Step 6: 前端交互与渲染 ===== */
 // 表单提交, 进度更新, iframe 渲染

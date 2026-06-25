@@ -165,6 +165,14 @@
 
 **验证：** 在控制台手动调用 `streamGenerate("一个计数器页面", (chunk) => console.log(chunk))`，能看到逐字输出
 
+**✅ 已完成。** 实现细节：
+- `streamGenerate(query, onChunk)` 异步函数
+- URL 拼接：`baseUrl` 去尾部斜杠 + `/chat/completions`
+- fetch 错误区分：`TypeError: Failed to fetch` → CORS/网络不可达提示；其他 → 通用网络错误
+- HTTP 非 200：尝试解析 `errorBody.error.message`，失败则用状态码
+- SSE 解析：`buffer` 缓存不完整行，按 `\n` 分割，`data: ` 前缀过滤，`[DONE]` 终止
+- markdown 过滤：`inCodeBlock` 状态跟踪，移除 ` ```html ` 和 ` ``` ` 标记
+
 ---
 
 ## Step 6: 前端交互与渲染
