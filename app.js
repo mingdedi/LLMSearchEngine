@@ -393,4 +393,42 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!getConfig().apiKey) {
     openSettings();
   }
+
+  /* ===== 标语轮播 ===== */
+  const taglineEl = document.getElementById('tagline');
+  const phrases = [
+    '描述你想要的页面，AI 为你实时生成',
+    'What can I say?!',
+    '摸鱼小游戏？',
+    'Windows模拟器',
+    '原神启动！！！',
+    'iKun TV'
+  ];
+
+  taglineEl.innerHTML = phrases.map((p, i) =>
+    `<span class="tagline-text${i === 0 ? ' active' : ''}">${p}</span>`
+  ).join('');
+
+  let currentIdx = 0;
+  const spans = taglineEl.querySelectorAll('.tagline-text');
+
+  function rotateTagline() {
+    const current = spans[currentIdx];
+    current.classList.remove('active');
+    current.classList.add('leaving');
+
+    let nextIdx;
+    do {
+      nextIdx = Math.floor(Math.random() * phrases.length);
+    } while (nextIdx === currentIdx && phrases.length > 1);
+
+    currentIdx = nextIdx;
+
+    setTimeout(() => {
+      current.classList.remove('leaving');
+      spans[currentIdx].classList.add('active');
+    }, 500);
+  }
+
+  setInterval(rotateTagline, 2800);
 });
