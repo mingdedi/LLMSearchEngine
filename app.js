@@ -371,6 +371,26 @@ function openInNewTab() {
   }
 }
 
+function downloadHtml() {
+  if (!lastHtml) return;
+
+  const blob = new Blob([lastHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const safeName = (lastQuery || 'generated-page')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .slice(0, 50)
+    .trim() || 'generated-page';
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeName}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /* ===== 强制修正 → 跳转小游戏 ===== */
 
 function openForceGame() {
@@ -453,6 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('open-new-tab-btn').addEventListener('click', openInNewTab);
+
+  document.getElementById('download-btn').addEventListener('click', downloadHtml);
 
   document.getElementById('force-correct-btn').addEventListener('click', openForceGame);
 
