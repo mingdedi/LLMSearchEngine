@@ -207,6 +207,15 @@
 
 **验证：** 端到端测试——输入"一个番茄钟计时器"，能看到流式生成进度，最终在 iframe 中渲染出可用的番茄钟页面
 
+**✅ 已完成。** 实现细节：
+- `handleGenerate(query)` 串联全流程：禁用输入 → 显示进度 → 流式接收 → 渲染 iframe
+- 进度估算：每 500 字符 +5%，上限 95%；完成时设 100% + 500ms 延迟后切换到渲染区
+- `lastQuery` / `lastHtml` 缓存上次查询，支持重试和重新生成
+- `#retry-btn` 和 `#regenerate-btn` 都调用 `handleGenerate(lastQuery)`
+- `#open-new-tab-btn` 用 `window.open()` + `document.write()` 在新标签页打开
+- 错误时隐藏进度区、显示错误区、恢复输入
+- `body.has-result` 触发搜索区缩小上移
+
 ---
 
 ## Step 7: 端到端测试与修复

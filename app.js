@@ -191,15 +191,99 @@ async function streamGenerate(query, onChunk) {
   }
 }
 
-/* ===== Step 6: 前端交互与渲染 ===== */
-// 表单提交, 进度更新, iframe 渲染
+/* ===== 前端交互与渲染 ===== */
+
+let lastQuery = '';
+let lastHtml = '';
+
+function handleGenerate(query) {
+  if (!query.trim()) return;
+
+  const config = getConfig();
+  if (!config.apiKey) {
+    openSettings();
+    return;
+  }
+
+  lastQuery = query;
+
+  const input = document.getElementById('search-input');
+  const btn = document.getElementById('generate-btn');
+  const progressSection = document.getElementById('progress-section');
+  const progressBar = document.getElementById('progress-bar');
+  const progressText = document.getElementById('progress-text');
+  const resultSection = document.getElementById('result-section');
+  const errorSection = document.getElementById('error-section');
+
+  input.disabled = true;
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  resultSection.classList.add('hidden');
+  errorSection.classList.add('hidden');
+  progressSection.classList.remove('hidden');
+  progressBar.style.width = '0%';
+  progressBar.classList.add('pulsing');
+  progressText.textContent = '准备生成...';
+
+  document.body.classList.remove('has-result');
+
+  let html = '';
+  let charCount = 0;
+
+  streamGenerate(query, (chunk) => {
+    html += chunk;
+    charCount += chunk.length;
+
+    const progress = Math.min(95, Math.floor(charCount / 500) * 5);
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `已生成 ${charCount} 字符...`;
+  }).then(() => {
+    progressBar.style.width = '100%';
+    progressBar.classList.remove('pulsing');
+    progressText.textContent = '生成完成！正在渲染...';
+
+    lastHtml = html;
+
+    setTimeout(() => {
+      progressSection.classList.add('hidden');
+      const frame = document.getElementById('result-frame');
+      frame.srcdoc = html;
+      resultSection.classList.remove('hidden');
+      document.body.classList.add('has-result');
+      input.disabled = false;
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }, 500);
+  }).catch((err) => {
+    progressSection.classList.add('hidden');
+    errorSection.classList.remove('hidden');
+    document.getElementById('error-text').textContent = err.message;
+    input.disabled = false;
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  });
+}
+
+function openInNewTab() {
+  if (!lastHtml) return;
+  const newTab = window.open('', '_blank');
+  if (newTab) {
+    newTab.document.write(lastHtml);
+    newTab.document.close();
+  }
+}
 
 /* ===== 初始化 ===== */
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('search-form');
   if (form) {
-    form.addEventListener('submit', (e) => e.preventDefault());
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = document.getElementById('search-input').value;
+      handleGenerate(query);
+    });
   }
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
@@ -211,6 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('settings-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeSettings();
+  });
+
+  document.getElementById('retry-btn').addEventListener('click', () => {
+    if (lastQuery) handleGenerate(lastQuery);
+  });
+
+  document.getElementById('open-new-tab-btn').addEventListener('click', openInNewTab);
+
+  document.getElementById('regenerate-btn').addEventListener('click', () => {
+    if (lastQuery) handleGenerate(lastQuery);
   });
 
   document.addEventListener('keydown', (e) => {
