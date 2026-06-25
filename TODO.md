@@ -60,6 +60,16 @@
 
 **验证：** 页面视觉美观，输入框/按钮有交互反馈，设置面板弹出效果正常
 
+**✅ 已完成。** 实现细节：
+- `@keyframes pulse` — 进度条脉冲，`.progress-bar-fill.pulsing` 触发
+- `@keyframes spin` — 按钮 loading 旋转，`.generate-btn.loading::before` 伪元素 spinner
+- `@keyframes fadeInUp` — 进度区/渲染区淡入上滑
+- `@keyframes shake` — 错误提示抖动
+- 输入框 focus glow — `box-shadow: 0 0 0 3px var(--accent-glow)`
+- 模态框过渡 — `opacity + visibility + transform: scale` 替代 `display:none`，HTML 类名从 `hidden` 改为 `modal-hidden`
+- 搜索区缩小 — `body.has-result .search-section` 调整 padding 和字号
+- 生成按钮 HTML 增加 `<span class="btn-text">` 包裹文字，loading 时隐藏
+
 ---
 
 ## Step 3: 配置管理模块

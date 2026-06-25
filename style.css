@@ -6,12 +6,14 @@
   --text-secondary: #a0a0b0;
   --accent: #6c63ff;
   --accent-hover: #5a52d9;
+  --accent-glow: rgba(108, 99, 255, 0.3);
   --border: #2a2a4a;
   --danger: #ff5252;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-pill: 24px;
+  --transition: 0.3s ease;
 }
 
 /* ===== Reset ===== */
@@ -48,7 +50,7 @@ body {
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all 0.3s ease;
+  transition: all var(--transition);
   z-index: 100;
 }
 
@@ -75,18 +77,34 @@ body {
   align-items: center;
   padding-top: 15vh;
   gap: 12px;
+  transition: all 0.5s ease;
+}
+
+/* 搜索区在有结果时缩小上移 */
+body.has-result .search-section {
+  padding-top: 4vh;
+}
+
+body.has-result .logo {
+  font-size: 1.6rem;
+}
+
+body.has-result .tagline {
+  font-size: 0.85rem;
 }
 
 .logo {
   font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: -1px;
+  transition: font-size 0.5s ease;
 }
 
 .tagline {
   color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 8px;
+  transition: font-size 0.5s ease;
 }
 
 .search-bar {
@@ -105,15 +123,21 @@ body {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .search-input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .search-input::placeholder {
   color: var(--text-secondary);
+}
+
+.search-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .generate-btn {
@@ -125,17 +149,47 @@ body {
   background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
   white-space: nowrap;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 100px;
 }
 
-.generate-btn:hover {
+.generate-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.4);
+  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
-.generate-btn:active {
+.generate-btn:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.generate-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* 生成按钮 loading 状态 */
+.generate-btn.loading {
+  pointer-events: none;
+}
+
+.generate-btn.loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.generate-btn.loading .btn-text {
+  display: none;
 }
 
 /* ===== Progress Section ===== */
@@ -143,6 +197,7 @@ body {
   margin: 40px auto 0;
   width: 100%;
   max-width: 600px;
+  animation: fadeInUp 0.4s ease;
 }
 
 .progress-bar-track {
@@ -160,6 +215,11 @@ body {
   transition: width 0.3s ease;
 }
 
+/* 进度条脉冲动画 */
+.progress-bar-fill.pulsing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .progress-text {
   text-align: center;
   margin-top: 12px;
@@ -173,6 +233,7 @@ body {
   text-align: center;
   width: 100%;
   max-width: 600px;
+  animation: shake 0.5s ease;
 }
 
 .error-text {
@@ -190,7 +251,7 @@ body {
   color: var(--danger);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
 }
 
 .retry-btn:hover {
@@ -204,6 +265,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  animation: fadeInUp 0.5s ease;
 }
 
 .result-toolbar {
@@ -231,7 +293,7 @@ body {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
 }
 
 .tool-btn:hover {
@@ -260,6 +322,16 @@ body {
   justify-content: center;
   z-index: 200;
   backdrop-filter: blur(4px);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 模态框隐藏状态（用 opacity+visibility 替代 display:none 以支持过渡） */
+.modal-overlay.modal-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .modal-content {
@@ -269,6 +341,12 @@ body {
   width: 90%;
   max-width: 480px;
   overflow: hidden;
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.modal-hidden .modal-content {
+  transform: scale(0.95);
 }
 
 .modal-header {
@@ -291,6 +369,7 @@ body {
   cursor: pointer;
   line-height: 1;
   padding: 0;
+  transition: color var(--transition);
 }
 
 .modal-close:hover {
@@ -321,11 +400,12 @@ body {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .form-group input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .form-group input::placeholder {
@@ -354,12 +434,18 @@ body {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
 }
 
 .preset-btn:hover {
   border-color: var(--accent);
   color: var(--text-primary);
+}
+
+.preset-btn.active {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-glow);
 }
 
 .security-note {
@@ -385,7 +471,7 @@ body {
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
 }
 
 .btn-secondary:hover {
@@ -401,11 +487,50 @@ body {
   color: white;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
+}
+
+/* ===== Keyframes ===== */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-6px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(6px);
+  }
 }
 
 /* ===== Responsive ===== */
