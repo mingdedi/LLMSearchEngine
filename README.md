@@ -19,10 +19,14 @@
 
 | 服务商 | Base URL | Model 示例 |
 |--------|----------|-----------|
-| OpenAI | `https://api.openai.com/v1` | `gpt-4o` |
-| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| 智谱 | `https://open.bigmodel.cn/api/paas/v4` | `glm-4` |
-| Moonshot | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
+| **小米 MiMo ⭐推荐** | `https://api.xiaomimimo.com/v1` | `mimo-v2.5-pro-ultraspeed` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-5.5` |
+| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-v4-pro` |
+| 智谱 | `https://open.bigmodel.cn/api/paas/v4` | `glm-5.2` |
+| Moonshot | `https://api.moonshot.cn/v1` | `kimi-k2.7-code` |
+
+> **💡 推荐：** 使用 [MiMo-V2.5-Pro-UltraSpeed](https://mimo.mi.com/models/zh-CN/mimo-v2.5-pro-ultraspeed) 获得最佳体验。该模型为万亿参数旗舰模型，推理速度突破 1000 tokens/s，生成页面几乎实时响应，非常适合本项目的流式生成场景。  
+**截止目前（2026-06-26）该高速度模型处于内测阶段，需要申请才可使用**
 
 ## 隐私说明
 
@@ -36,3 +40,9 @@
 - 流式传输：fetch + ReadableStream
 - 安全沙箱：iframe sandbox + srcdoc
 - 部署：GitHub Pages
+
+## 关于本项目
+
+for VibeCoding，本项目全部由 **Qwen Code** + **GLM-5.2** 生成，从零到一，无手写代码。
+
+灵感来源于 Microsoft Build 上 **Scott Hanselman** 与 **Mark Russinovich** 的演讲 [Scott and Mark learn to Vibe Check](https://build.microsoft.com/en-US/sessions/LIVE101)（LIVE101）。演讲中提出的 **vibeOS** 理念——开发者从"写代码"转变为"描述意图，AI 生成实现"——直接启发了本项目：用自然语言描述你想要的页面，AI 实时为你生成。
