@@ -225,22 +225,29 @@ function handleGenerate(query) {
   progressBar.classList.add('pulsing');
   progressText.textContent = '准备生成...';
 
+  document.title = `生成中：${query} — LLMSearchEngine`;
+
   let html = '';
   let charCount = 0;
+  const startTime = Date.now();
 
   streamGenerate(conversationHistory, (chunk) => {
     html += chunk;
     charCount += chunk.length;
     const progress = Math.min(95, Math.floor(charCount / 500) * 5);
     progressBar.style.width = `${progress}%`;
-    progressText.textContent = `已生成 ${charCount} 字符...`;
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    progressText.textContent = `已生成 ${charCount} 字符 · ${elapsed}s`;
   }).then(() => {
     progressBar.style.width = '100%';
     progressBar.classList.remove('pulsing');
-    progressText.textContent = '生成完成！正在渲染...';
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    progressText.textContent = `生成完成 · ${charCount} 字符 · ${elapsed}s`;
 
     lastHtml = html;
     conversationHistory.push({ role: 'assistant', content: html });
+
+    document.title = `${query} — LLMSearchEngine`;
 
     setTimeout(() => {
       progressSection.classList.add('hidden');
@@ -280,6 +287,7 @@ function handleCorrection(correction) {
 
   let html = '';
   let charCount = 0;
+  const startTime = Date.now();
 
   streamGenerate(conversationHistory, (chunk) => {
     html += chunk;
@@ -316,6 +324,7 @@ function goBack() {
   document.getElementById('result-section').classList.add('hidden');
   document.getElementById('search-input').value = '';
   document.getElementById('search-input').focus();
+  document.title = 'LLMSearchEngine — 生成式搜索引擎';
   conversationHistory = [];
   lastHtml = '';
 }
