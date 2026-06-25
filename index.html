@@ -78,6 +78,7 @@
       </form>
 
       <button id="open-new-tab-btn" class="icon-btn" title="在新标签页打开">↗</button>
+      <button id="force-correct-btn" class="force-correct-btn" title="强制修正">强制修正</button>
     </div>
 
     <!-- 修正进度条（初始隐藏） -->
@@ -94,6 +95,32 @@
       title="生成的页面"
     ></iframe>
 
+  </section>
+
+  <!-- ===== LLM 跳格子小游戏（初始隐藏） ===== -->
+  <section id="game-section" class="game-section hidden">
+    <div class="game-header">
+      <span class="game-score">SCORE: <span id="game-score">0</span></span>
+      <span class="game-hint">空格 / 点击跳跃</span>
+    </div>
+    <canvas id="game-canvas" class="game-canvas"></canvas>
+
+    <!-- 开始遮罩 -->
+    <div id="game-start-overlay" class="game-overlay">
+      <h2 class="game-title">LLM Jump</h2>
+      <p>按空格键或点击屏幕跳跃，躲过随机字符串柱子</p>
+      <button id="game-start-btn" class="game-start-btn">开始游戏</button>
+    </div>
+
+    <!-- 游戏结束遮罩 -->
+    <div id="game-over-overlay" class="game-overlay hidden">
+      <h2 class="game-over-text" data-text="YOUR LLM HAS DISAPPEARED">YOUR LLM HAS DISAPPEARED</h2>
+      <p class="game-over-score">Score: <span id="game-final-score">0</span></p>
+      <div class="game-over-buttons">
+        <button id="game-restart-btn" class="game-restart-btn">重启游戏</button>
+        <button id="game-home-btn" class="game-home-btn">返回首页</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== 设置面板（模态框，初始隐藏） ===== -->
