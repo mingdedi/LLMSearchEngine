@@ -132,6 +132,10 @@
 
 **验证：** 在浏览器控制台 `console.log(SYSTEM_PROMPT)` 能看到提示词内容
 
+**✅ 已完成。** 实现细节：
+- `SYSTEM_PROMPT` 常量：7 条规则，覆盖纯 HTML 输出、内联 CSS/JS、CDN 例外、响应式、美观、无 markdown、可运行
+- `buildUserPrompt(query)` 函数：将用户输入包装为生成指令
+
 ---
 
 ## Step 5: LLM 流式调用

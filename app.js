@@ -77,8 +77,22 @@ function handlePresetClick(e) {
   btn.classList.add('active');
 }
 
-/* ===== Step 4: 系统提示词 ===== */
-// SYSTEM_PROMPT, buildUserPrompt(query)
+/* ===== 系统提示词 ===== */
+
+const SYSTEM_PROMPT = `你是一个专业的网页生成器。根据用户描述，生成一个完整、独立、可直接运行的 HTML 页面。
+
+规则：
+1. 只输出纯 HTML 代码，从 <!DOCTYPE html> 开始
+2. 所有 CSS 内联在 <style> 中，所有 JS 内联在 <script> 中
+3. 不使用外部依赖（CDN 除外，如 Tailwind CDN）
+4. 页面必须响应式，适配移动端
+5. 设计现代、美观，交互完整
+6. 不要输出任何解释、markdown 标记或代码块标记
+7. 确保所有功能在浏览器中可正常运行`;
+
+function buildUserPrompt(query) {
+  return `请根据以下描述生成一个完整的 HTML 页面：\n\n${query}`;
+}
 
 /* ===== Step 5: LLM 流式调用 ===== */
 // streamGenerate(query, onChunk)
