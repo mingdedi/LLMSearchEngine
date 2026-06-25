@@ -246,7 +246,7 @@
     /* 速度为原版 0.5 倍 */
     const BASE_SPEED   = 2.5;
     const SPEED_ACCEL  = 0.0015;
-    const JUMP_VY      = 6.5;
+    const JUMP_VY      = 10;
     const GRAVITY      = 0.35;
     const SPAWN_MIN    = 140;
     const SPAWN_MAX    = 240;
@@ -275,7 +275,7 @@
 
     function spawnHurdle() {
       const cols = 3 + Math.floor(Math.random() * 3);
-      const rows = 4 + Math.floor(Math.random() * 5);
+      const rows = 3 + Math.floor(Math.random() * 3);
       const w = cols * CHAR_SIZE;
       const h = rows * CHAR_SIZE;
 
@@ -385,8 +385,8 @@
             const cy = hy + r * CHAR_SIZE + CHAR_SIZE / 2;
             const ch = hurdle.grid[r][c];
 
-            const brightness = 0.4 + ((r + c) % 3) * 0.2;
-            ctx.fillStyle = `rgba(108, 99, 255, ${brightness})`;
+            const brightness = 0.5 + ((r + c) % 3) * 0.2;
+            ctx.fillStyle = `rgba(57, 255, 20, ${brightness})`;
             ctx.fillText(ch, cx, cy);
           }
         }
@@ -396,7 +396,7 @@
       const llmBottom = groundY - llm.y;
 
       if (llm.jumping) {
-        ctx.fillStyle = 'rgba(108, 99, 255, 0.2)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.beginPath();
         ctx.ellipse(llm.x + llm.width / 2, groundY + 2, llm.width / 2, 4, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -406,10 +406,10 @@
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
 
-      ctx.fillStyle = 'rgba(108, 99, 255, 0.3)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.fillText('LLM', llm.x + 2, llmBottom + 2);
 
-      ctx.fillStyle = '#6c63ff';
+      ctx.fillStyle = '#ffffff';
       ctx.fillText('LLM', llm.x, llmBottom);
     }
 
