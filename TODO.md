@@ -293,6 +293,11 @@
 
 **验证：** 线上访问正常，配置保存正常，生成功能正常
 
+**✅ README.md 已创建。** 部署步骤需用户手动操作：
+1. `git push` 推送到 GitHub 仓库
+2. 仓库 Settings → Pages → Source: main branch, Folder: / (root)
+3. 等待部署，访问 `https://mingdedi.github.io` 验证
+
 ---
 
 ## 完成标志
