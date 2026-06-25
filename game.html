@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Jump — 强制修正</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0b0;
+      --accent: #6c63ff;
+      --accent-hover: #5a52d9;
+      --accent-glow: rgba(108, 99, 255, 0.3);
+      --border: #2a2a4a;
+      --danger: #ff5252;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .game-score {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'Courier New', monospace;
+    }
+
+    .game-hint {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    #game-canvas {
+      flex: 1;
+      width: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    .game-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 15, 35, 0.92);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+
+    .game-overlay.hidden { display: none; }
+
+    .game-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .game-overlay p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 24px;
+    }
+
+    .game-start-btn {
+      padding: 12px 36px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .game-start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    /* ===== Glitch Art ===== */
+    .game-over-text {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #ff5252;
+      text-align: center;
+      margin-bottom: 8px;
+      position: relative;
+      animation: glitchShift 0.15s infinite;
+    }
+
+    .game-over-text::before,
+    .game-over-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+
+    .game-over-text::before {
+      color: #00fff9;
+      animation: glitchTop 0.3s infinite linear alternate-reverse;
+    }
+
+    .game-over-text::after {
+      color: #ff00c1;
+      animation: glitchBottom 0.35s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitchShift {
+      0%   { transform: translate(0); }
+      25%  { transform: translate(-1px, 1px); }
+      50%  { transform: translate(1px, -1px); }
+      75%  { transform: translate(-1px, -1px); }
+      100% { transform: translate(1px, 1px); }
+    }
+
+    @keyframes glitchTop {
+      0%   { clip-path: inset(0 0 85% 0); transform: translate(-2px, -1px); }
+      100% { clip-path: inset(0 0 85% 0); transform: translate(2px, 1px); }
+    }
+
+    @keyframes glitchBottom {
+      0%   { clip-path: inset(85% 0 0 0); transform: translate(2px, 1px); }
+      100% { clip-path: inset(85% 0 0 0); transform: translate(-2px, -1px); }
+    }
+
+    .game-over-score {
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .game-over-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .game-btn {
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .game-btn-primary {
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: white;
+    }
+
+    .game-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .game-btn-secondary {
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .game-btn-secondary:hover {
+      background: var(--accent-glow);
+    }
+
+    .game-btn-ghost {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .game-btn-ghost:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-header">
+    <span class="game-score">SCORE: <span id="game-score">0</span></span>
+    <span class="game-hint">空格 / 点击跳跃</span>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <div id="game-start-overlay" class="game-overlay">
+    <h2 class="game-title">LLM Jump</h2>
+    <p>按空格键或点击屏幕跳跃，躲过 ASCII 字符柱子</p>
+    <button id="game-start-btn" class="game-start-btn">开始游戏</button>
+  </div>
+
+  <div id="game-over-overlay" class="game-overlay hidden">
+    <h2 class="game-over-text" data-text="YOUR LLM HAS DISAPPEARED">YOUR LLM HAS DISAPPEARED</h2>
+    <p class="game-over-score">Score: <span id="game-final-score">0</span></p>
+    <div class="game-over-buttons">
+      <button id="game-restart-btn" class="game-btn game-btn-primary">重启游戏</button>
+      <button id="game-continue-btn" class="game-btn game-btn-secondary">继续修正</button>
+      <button id="game-home-btn" class="game-btn game-btn-ghost">返回首页</button>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let animId = null;
+    let state = null;
+
+    /* 速度为原版 0.5 倍 */
+    const BASE_SPEED   = 2.5;
+    const SPEED_ACCEL  = 0.0015;
+    const JUMP_VY      = 6.5;
+    const GRAVITY      = 0.35;
+    const SPAWN_MIN    = 140;
+    const SPAWN_MAX    = 240;
+
+    const ASCII_CHARS = '#$%&*+=@!~^|/<>{}[]01abcXYZ';
+    const CHAR_SIZE   = 11;
+
+    function initState() {
+      return {
+        running: false,
+        score: 0,
+        speed: BASE_SPEED,
+        llm: { x: 80, y: 0, vy: 0, jumping: false, width: 54, height: 32 },
+        hurdles: [],
+        groundY: 0,
+        spawnTimer: 0,
+        spawnInterval: 160
+      };
+    }
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      if (state) state.groundY = canvas.height - 50;
+    }
+
+    function spawnHurdle() {
+      const cols = 3 + Math.floor(Math.random() * 3);
+      const rows = 4 + Math.floor(Math.random() * 5);
+      const w = cols * CHAR_SIZE;
+      const h = rows * CHAR_SIZE;
+
+      const grid = [];
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) {
+          row.push(ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)]);
+        }
+        grid.push(row);
+      }
+
+      state.hurdles.push({
+        x: canvas.width + 20,
+        width: w,
+        height: h,
+        cols: cols,
+        rows: rows,
+        grid: grid
+      });
+    }
+
+    function update() {
+      const llm = state.llm;
+
+      if (llm.jumping) {
+        llm.vy -= GRAVITY;
+        llm.y += llm.vy;
+        if (llm.y <= 0) {
+          llm.y = 0;
+          llm.vy = 0;
+          llm.jumping = false;
+        }
+      }
+
+      state.spawnTimer++;
+      if (state.spawnTimer >= state.spawnInterval) {
+        state.spawnTimer = 0;
+        state.spawnInterval = SPAWN_MIN + Math.floor(Math.random() * (SPAWN_MAX - SPAWN_MIN));
+        spawnHurdle();
+      }
+
+      for (let i = state.hurdles.length - 1; i >= 0; i--) {
+        const hurdle = state.hurdles[i];
+        hurdle.x -= state.speed;
+        if (hurdle.x + hurdle.width < 0) {
+          state.hurdles.splice(i, 1);
+          state.score += 10;
+          document.getElementById('game-score').textContent = state.score;
+        }
+      }
+
+      state.speed += SPEED_ACCEL;
+
+      const llmLeft   = llm.x;
+      const llmRight  = llm.x + llm.width;
+      const llmBottom = state.groundY - llm.y;
+      const llmTop    = llmBottom - llm.height;
+
+      for (const hurdle of state.hurdles) {
+        const hLeft  = hurdle.x;
+        const hRight = hurdle.x + hurdle.width;
+        const hTop   = state.groundY - hurdle.height;
+
+        if (llmRight > hLeft + 4 && llmLeft < hRight - 4 && llmBottom > hTop + 4) {
+          gameOver();
+          return;
+        }
+      }
+    }
+
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const groundY = state.groundY;
+
+      ctx.fillStyle = '#0f0f23';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = '#2a2a4a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(w, groundY);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(42, 42, 74, 0.4)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, groundY);
+        ctx.lineTo(x + 20, groundY + 8);
+        ctx.stroke();
+      }
+
+      ctx.font = CHAR_SIZE + 'px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (const hurdle of state.hurdles) {
+        const hx = hurdle.x;
+        const hy = groundY - hurdle.height;
+
+        for (let r = 0; r < hurdle.rows; r++) {
+          for (let c = 0; c < hurdle.cols; c++) {
+            const cx = hx + c * CHAR_SIZE + CHAR_SIZE / 2;
+            const cy = hy + r * CHAR_SIZE + CHAR_SIZE / 2;
+            const ch = hurdle.grid[r][c];
+
+            const brightness = 0.4 + ((r + c) % 3) * 0.2;
+            ctx.fillStyle = `rgba(108, 99, 255, ${brightness})`;
+            ctx.fillText(ch, cx, cy);
+          }
+        }
+      }
+
+      const llm = state.llm;
+      const llmBottom = groundY - llm.y;
+
+      if (llm.jumping) {
+        ctx.fillStyle = 'rgba(108, 99, 255, 0.2)';
+        ctx.beginPath();
+        ctx.ellipse(llm.x + llm.width / 2, groundY + 2, llm.width / 2, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.font = 'bold 32px "Courier New", monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+
+      ctx.fillStyle = 'rgba(108, 99, 255, 0.3)';
+      ctx.fillText('LLM', llm.x + 2, llmBottom + 2);
+
+      ctx.fillStyle = '#6c63ff';
+      ctx.fillText('LLM', llm.x, llmBottom);
+    }
+
+    function loop() {
+      if (!state || !state.running) return;
+      update();
+      draw();
+      animId = requestAnimationFrame(loop);
+    }
+
+    function startGame() {
+      state = initState();
+      state.groundY = canvas.height - 50;
+      state.running = true;
+      document.getElementById('game-score').textContent = '0';
+      document.getElementById('game-start-overlay').classList.add('hidden');
+      document.getElementById('game-over-overlay').classList.add('hidden');
+      loop();
+    }
+
+    function jump() {
+      if (!state || !state.running) return;
+      if (!state.llm.jumping) {
+        state.llm.jumping = true;
+        state.llm.vy = JUMP_VY;
+      }
+    }
+
+    function gameOver() {
+      state.running = false;
+      cancelAnimationFrame(animId);
+      document.getElementById('game-final-score').textContent = state.score;
+      document.getElementById('game-over-overlay').classList.remove('hidden');
+    }
+
+    function continueCorrect() {
+      window.location.href = 'index.html';
+    }
+
+    function goHome() {
+      sessionStorage.removeItem('llm_game_context');
+      window.location.href = 'index.html';
+    }
+
+    /* ===== 事件绑定 ===== */
+
+    document.getElementById('game-start-btn').addEventListener('click', startGame);
+    document.getElementById('game-restart-btn').addEventListener('click', startGame);
+    document.getElementById('game-continue-btn').addEventListener('click', continueCorrect);
+    document.getElementById('game-home-btn').addEventListener('click', goHome);
+
+    canvas.addEventListener('click', jump);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (state && state.running) {
+          jump();
+        } else {
+          const startVisible = !document.getElementById('game-start-overlay').classList.contains('hidden');
+          const overVisible = !document.getElementById('game-over-overlay').classList.contains('hidden');
+          if (startVisible) startGame();
+          else if (overVisible) startGame();
+        }
+      }
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ===== 初始化 ===== */
+
+    resizeCanvas();
+    state = initState();
+    state.groundY = canvas.height - 50;
+    draw();
+  </script>
+</body>
+</html>

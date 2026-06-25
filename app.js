@@ -371,229 +371,39 @@ function openInNewTab() {
   }
 }
 
-/* ===== LLM 跳格子小游戏 ===== */
-
-let gameCanvas = null;
-let gameCtx = null;
-let gameAnimId = null;
-let gameState = null;
-
-function initGameState() {
-  return {
-    running: false,
-    score: 0,
-    speed: 5,
-    llm: { x: 80, y: 0, vy: 0, jumping: false, width: 54, height: 36 },
-    hurdles: [],
-    groundY: 0,
-    spawnTimer: 0,
-    spawnInterval: 100,
-    frameCount: 0
-  };
-}
-
-function resizeGameCanvas() {
-  if (!gameCanvas) return;
-  gameCanvas.width = gameCanvas.offsetWidth;
-  gameCanvas.height = gameCanvas.offsetHeight;
-  if (gameState) gameState.groundY = gameCanvas.height - 50;
-}
+/* ===== 强制修正 → 跳转小游戏 ===== */
 
 function openForceGame() {
-  document.getElementById('result-section').classList.add('hidden');
-  document.getElementById('game-section').classList.remove('hidden');
-
-  gameCanvas = document.getElementById('game-canvas');
-  gameCtx = gameCanvas.getContext('2d');
-  resizeGameCanvas();
-
-  gameState = initGameState();
-  gameState.groundY = gameCanvas.height - 50;
-
-  document.getElementById('game-score').textContent = '0';
-  document.getElementById('game-over-overlay').classList.add('hidden');
-  document.getElementById('game-start-overlay').classList.remove('hidden');
-
-  drawGame();
+  sessionStorage.setItem('llm_game_context', JSON.stringify({
+    conversationHistory,
+    lastHtml,
+    lastQuery
+  }));
+  window.location.href = 'game.html';
 }
 
-function startGameLoop() {
-  if (!gameState) return;
-  gameState.running = true;
-  document.getElementById('game-start-overlay').classList.add('hidden');
-  gameLoop();
-}
+function restoreContext() {
+  const saved = sessionStorage.getItem('llm_game_context');
+  if (!saved) return false;
 
-function gameLoop() {
-  if (!gameState || !gameState.running) return;
-  updateGame();
-  drawGame();
-  gameAnimId = requestAnimationFrame(gameLoop);
-}
+  try {
+    const ctx = JSON.parse(saved);
+    conversationHistory = ctx.conversationHistory || [];
+    lastHtml = ctx.lastHtml || '';
+    lastQuery = ctx.lastQuery || '';
 
-function updateGame() {
-  const llm = gameState.llm;
-
-  if (llm.jumping) {
-    llm.vy -= 0.7;
-    llm.y += llm.vy;
-    if (llm.y <= 0) {
-      llm.y = 0;
-      llm.vy = 0;
-      llm.jumping = false;
+    if (lastHtml) {
+      const frame = document.getElementById('result-frame');
+      frame.srcdoc = lastHtml;
+      document.getElementById('result-section').classList.remove('hidden');
+      document.title = `${lastQuery} — LLMSearchEngine`;
+      sessionStorage.removeItem('llm_game_context');
+      return true;
     }
+  } catch (e) {
+    sessionStorage.removeItem('llm_game_context');
   }
-
-  gameState.spawnTimer++;
-  if (gameState.spawnTimer >= gameState.spawnInterval) {
-    gameState.spawnTimer = 0;
-    gameState.spawnInterval = 70 + Math.floor(Math.random() * 50);
-    spawnHurdle();
-  }
-
-  for (let i = gameState.hurdles.length - 1; i >= 0; i--) {
-    const h = gameState.hurdles[i];
-    h.x -= gameState.speed;
-    if (h.x + h.width < 0) {
-      gameState.hurdles.splice(i, 1);
-      gameState.score += 10;
-      document.getElementById('game-score').textContent = gameState.score;
-    }
-  }
-
-  gameState.speed += 0.003;
-  gameState.frameCount++;
-
-  const llmLeft = llm.x;
-  const llmRight = llm.x + llm.width;
-  const llmBottom = gameState.groundY - llm.y;
-  const llmTop = llmBottom - llm.height;
-
-  for (const h of gameState.hurdles) {
-    const hLeft = h.x;
-    const hRight = h.x + h.width;
-    const hTop = gameState.groundY - h.height;
-    const hBottom = gameState.groundY;
-
-    if (llmRight > hLeft + 4 && llmLeft < hRight - 4 && llmBottom > hTop + 4) {
-      gameOver();
-      return;
-    }
-  }
-}
-
-function spawnHurdle() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const len = 4 + Math.floor(Math.random() * 4);
-  let str = '';
-  for (let i = 0; i < len; i++) {
-    str += chars[Math.floor(Math.random() * chars.length)];
-  }
-  const height = 45 + Math.random() * 50;
-  const width = 12 + str.length * 9;
-  gameState.hurdles.push({
-    x: gameCanvas.width + 20,
-    width: width,
-    height: height,
-    string: str
-  });
-}
-
-function drawGame() {
-  if (!gameCtx || !gameCanvas) return;
-  const ctx = gameCtx;
-  const w = gameCanvas.width;
-  const h = gameCanvas.height;
-  const groundY = gameState.groundY;
-
-  ctx.fillStyle = '#0f0f23';
-  ctx.fillRect(0, 0, w, h);
-
-  ctx.strokeStyle = '#2a2a4a';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, groundY);
-  ctx.lineTo(w, groundY);
-  ctx.stroke();
-
-  ctx.strokeStyle = 'rgba(42, 42, 74, 0.4)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < w; x += 40) {
-    ctx.beginPath();
-    ctx.moveTo(x, groundY);
-    ctx.lineTo(x + 20, groundY + 8);
-    ctx.stroke();
-  }
-
-  ctx.font = '14px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  for (const hurdle of gameState.hurdles) {
-    const hx = hurdle.x;
-    const hy = groundY - hurdle.height;
-
-    ctx.fillStyle = 'rgba(108, 99, 255, 0.15)';
-    ctx.fillRect(hx, hy, hurdle.width, hurdle.height);
-
-    ctx.strokeStyle = '#6c63ff';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(hx, hy, hurdle.width, hurdle.height);
-
-    ctx.fillStyle = '#a0a0b0';
-    ctx.fillText(hurdle.string, hx + hurdle.width / 2, hy + hurdle.height / 2);
-  }
-
-  const llm = gameState.llm;
-  const llmBottom = groundY - llm.y;
-
-  if (llm.jumping) {
-    ctx.fillStyle = 'rgba(108, 99, 255, 0.2)';
-    ctx.beginPath();
-    ctx.ellipse(llm.x + llm.width / 2, groundY + 2, llm.width / 2, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.font = 'bold 32px "Courier New", monospace';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-
-  ctx.fillStyle = 'rgba(108, 99, 255, 0.3)';
-  ctx.fillText('LLM', llm.x + 2, llmBottom + 2);
-
-  ctx.fillStyle = '#6c63ff';
-  ctx.fillText('LLM', llm.x, llmBottom);
-}
-
-function jumpLlm() {
-  if (!gameState || !gameState.running) return;
-  if (!gameState.llm.jumping) {
-    gameState.llm.jumping = true;
-    gameState.llm.vy = 13;
-  }
-}
-
-function gameOver() {
-  gameState.running = false;
-  cancelAnimationFrame(gameAnimId);
-  document.getElementById('game-final-score').textContent = gameState.score;
-  document.getElementById('game-over-overlay').classList.remove('hidden');
-}
-
-function restartGame() {
-  document.getElementById('game-over-overlay').classList.add('hidden');
-  gameState = initGameState();
-  gameState.groundY = gameCanvas.height - 50;
-  document.getElementById('game-score').textContent = '0';
-  startGameLoop();
-}
-
-function exitGameToHome() {
-  if (gameState) gameState.running = false;
-  cancelAnimationFrame(gameAnimId);
-  document.getElementById('game-section').classList.add('hidden');
-  document.getElementById('game-over-overlay').classList.add('hidden');
-  document.getElementById('game-start-overlay').classList.remove('hidden');
-  goBack();
+  return false;
 }
 
 function showToast(message, duration = 4000) {
@@ -646,21 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('force-correct-btn').addEventListener('click', openForceGame);
 
-  document.getElementById('game-start-btn').addEventListener('click', startGameLoop);
-  document.getElementById('game-restart-btn').addEventListener('click', restartGame);
-  document.getElementById('game-home-btn').addEventListener('click', exitGameToHome);
-
-  document.getElementById('game-canvas').addEventListener('click', jumpLlm);
-
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && gameState && gameState.running) {
-      e.preventDefault();
-      jumpLlm();
-    }
-  });
-
-  window.addEventListener('resize', resizeGameCanvas);
-
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSettings();
   });
@@ -668,6 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!getConfig().apiKey) {
     openSettings();
   }
+
+  restoreContext();
 
   /* ===== 标语轮播 ===== */
   const taglineEl = document.getElementById('tagline');
