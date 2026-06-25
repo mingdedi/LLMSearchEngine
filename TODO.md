@@ -100,6 +100,15 @@
 
 **验证：** 填写配置 → 保存 → 刷新页面 → 打开设置面板，配置仍在；清除 LocalStorage 后刷新，自动弹出设置面板
 
+**✅ 已完成。** 实现细节：
+- `STORAGE_KEY = 'llm_config'`，`DEFAULT_CONFIG` 含 apiKey/baseUrl/model
+- `loadConfig()` 合并默认值与已存配置，`saveConfig()` 写入 LocalStorage
+- `getConfig()` 惰性缓存，避免重复读取
+- 设置面板：打开时填充当前配置，保存时 trim + 回填默认值
+- 预设按钮：填充但不自动保存，点击后高亮 `.active`
+- 点击遮罩层或按 Esc 关闭面板
+- 页面加载时 apiKey 为空则自动弹出设置面板
+
 ---
 
 ## Step 4: 系统提示词
