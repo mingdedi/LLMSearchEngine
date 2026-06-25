@@ -29,33 +29,34 @@
 
 **验证：** 用浏览器打开 `index.html`，能看到所有区域的结构（未样式化也没关系）
 
+**✅ 已完成。** 实际创建文件：`index.html` + `style.css`（基础深色主题） + `app.js`（占位） + `.gitignore`
+
+**超出原计划的元素（供后续 Step 参考）：**
+- 错误提示区：`#error-section` / `#error-text` / `#retry-btn`
+- 渲染区工具栏：`#open-new-tab-btn`（新标签页打开）/ `#regenerate-btn`（重新生成）
+- 设置面板快捷预设：`.preset-btn`（`data-base-url` / `data-model` 属性，OpenAI / DeepSeek / 智谱）
+- 设置面板关闭按钮：`#config-close`
+- 标语：`.tagline`
+- Favicon：emoji SVG data URI
+- noscript 降级提示
+
 ---
 
-## Step 2: 样式设计
+## Step 2: 样式打磨与动画
 
-**目标：** 实现现代美观的搜索首页 + 设置面板样式
+**目标：** 在 Step 1 已有基础样式上，添加动画效果和视觉打磨
 
-**创建文件：**
-- `style.css`
+**修改文件：**
+- `style.css`（已存在，在此基础上增强）
 
 **具体要求：**
-1. 全局：`box-sizing: border-box`，清除默认 margin/padding
-2. 背景：深色渐变（如 `#0f0f23` → `#1a1a3e`）或浅色干净背景
-3. 搜索区：Flexbox 垂直水平居中，占视口高度 100%
-4. 输入框：大圆角（`border-radius: 24px`），padding 充足，focus 时高亮边框
-5. 生成按钮：醒目渐变色，hover 有上浮 + 阴影过渡动画
-6. 设置按钮：右上角齿轮图标，hover 旋转效果
-7. 进度条：
-   - 固定高度 6px，圆角，灰色底色
-   - 内部填充条用渐变色 + 宽度动画
-   - 生成中显示脉冲动画
-8. iframe 区域：全宽，高度 60vh，圆角边框，轻微阴影
-9. 设置面板（模态框）：
-   - 半透明遮罩层覆盖全屏
-   - 面板居中，白色背景，圆角，阴影
-   - 输入框全宽，有 focus 效果
-   - 按钮区右对齐
-10. 响应式：移动端输入框和按钮堆叠为垂直布局，面板宽度自适应
+1. 进度条生成中脉冲动画（`@keyframes pulse`）
+2. 生成按钮 loading 状态样式（旋转图标或脉冲）
+3. 模态框出现/消失过渡动画（`opacity` + `transform` 过渡）
+4. iframe 区域出现动画（淡入或上滑）
+5. 输入框 focus 时的 glow 效果（`box-shadow`）
+6. 错误提示出现动画（抖动或淡入）
+7. 搜索区在有结果时缩小上移（从居中变为顶部）
 
 **验证：** 页面视觉美观，输入框/按钮有交互反馈，设置面板弹出效果正常
 
@@ -66,7 +67,7 @@
 **目标：** 实现 LocalStorage 读写 + 设置面板交互
 
 **修改文件：**
-- `app.js`（创建文件）
+- `app.js`（已存在占位脚本，在此基础上添加逻辑）
 
 **具体要求：**
 1. 定义默认配置常量：
@@ -81,8 +82,9 @@
 3. `saveConfig(config)` — 保存配置到 LocalStorage
 4. 设置面板交互：
    - 点击 `#settings-btn` → 显示面板，填充当前配置
-   - 点击 `#config-cancel` → 隐藏面板
+   - 点击 `#config-cancel` 或 `#config-close` → 隐藏面板
    - 点击 `#config-save` → 保存配置，隐藏面板
+   - 点击 `.preset-btn` → 一键填充 Base URL 和 Model（不自动保存，用户需手动点保存）
 5. 页面加载时检测：如果 `apiKey` 为空，自动弹出设置面板
 6. 导出 `getConfig()` 供其他模块使用
 
@@ -150,23 +152,27 @@
 - `app.js`（追加内容）
 
 **具体要求：**
-1. 监听 `#generate-btn` 点击和输入框回车键
+1. 监听 `#search-form` 提交事件（已绑定 preventDefault，需添加实际逻辑）
 2. 提交时：
-   - 显示进度区，隐藏渲染区
+   - 显示 `#progress-section`，隐藏 `#result-section` 和 `#error-section`
    - 禁用输入框和按钮
    - 初始化进度条为 0
 3. 调用 `streamGenerate(query, onChunk)`：
    - `onChunk` 回调中：拼接 HTML 内容，更新进度条（基于已接收字符数估算，如每 500 字符 +5%，上限 95%）
-   - 更新进度文字（如"已生成 1234 字符..."）
+   - 更新 `#progress-text`（如"已生成 1234 字符..."）
 4. 生成完成后：
-   - 进度条设为 100%，短暂延迟后隐藏进度区
-   - 将完整 HTML 通过 `iframe.srcdoc` 注入
-   - 显示渲染区
+   - 进度条设为 100%，短暂延迟后隐藏 `#progress-section`
+   - 将完整 HTML 通过 `#result-frame.srcdoc` 注入
+   - 显示 `#result-section`
    - 恢复输入框和按钮
 5. 错误处理：
-   - 在进度区位置显示错误信息（红色文字）
+   - 隐藏 `#progress-section`，显示 `#error-section`
+   - 在 `#error-text` 中显示错误信息
    - 恢复输入框和按钮
-   - 提供重试引导
+   - `#retry-btn` 点击时重新提交上次的查询
+6. 渲染区工具栏交互：
+   - `#open-new-tab-btn`：用 `window.open()` + `document.write()` 在新标签页打开生成的 HTML
+   - `#regenerate-btn`：用上次的查询重新生成
 
 **验证：** 端到端测试——输入"一个番茄钟计时器"，能看到流式生成进度，最终在 iframe 中渲染出可用的番茄钟页面
 

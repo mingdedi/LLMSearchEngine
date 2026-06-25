@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMSearchEngine — 生成式搜索引擎</title>
+  <meta name="description" content="描述你想要的页面，AI 为你实时生成">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== 设置按钮（固定右上角） ===== -->
+  <button id="settings-btn" class="settings-btn" title="API 配置" aria-label="打开设置">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- ===== 主内容区 ===== -->
+  <main class="main-content">
+
+    <!-- 搜索区 -->
+    <section id="search-section" class="search-section">
+      <h1 class="logo">🔍 LLMSearchEngine</h1>
+      <p class="tagline">描述你想要的页面，AI 为你实时生成</p>
+      <form class="search-bar" id="search-form" autocomplete="off">
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="试试：一个贪吃蛇游戏"
+          aria-label="页面描述"
+        >
+        <button type="submit" id="generate-btn" class="generate-btn">生成</button>
+      </form>
+    </section>
+
+    <!-- 进度区（初始隐藏） -->
+    <section id="progress-section" class="progress-section hidden">
+      <div class="progress-bar-track">
+        <div id="progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+      <p id="progress-text" class="progress-text">准备生成...</p>
+    </section>
+
+    <!-- 错误提示区（初始隐藏） -->
+    <section id="error-section" class="error-section hidden">
+      <p id="error-text" class="error-text"></p>
+      <button id="retry-btn" class="retry-btn">重试</button>
+    </section>
+
+    <!-- 渲染区（初始隐藏） -->
+    <section id="result-section" class="result-section hidden">
+      <div class="result-toolbar">
+        <span class="result-label">生成结果</span>
+        <div class="result-actions">
+          <button id="open-new-tab-btn" class="tool-btn" title="在新标签页打开">↗ 新标签页</button>
+          <button id="regenerate-btn" class="tool-btn" title="重新生成">↻ 重新生成</button>
+        </div>
+      </div>
+      <iframe
+        id="result-frame"
+        class="result-frame"
+        sandbox="allow-scripts allow-forms allow-modals"
+        srcdoc=""
+        title="生成的页面"
+      ></iframe>
+    </section>
+
+  </main>
+
+  <!-- ===== 设置面板（模态框，初始隐藏） ===== -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h2>⚙ API 配置</h2>
+        <button id="config-close" class="modal-close" title="关闭" aria-label="关闭">×</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label for="config-api-key">API Key</label>
+          <input type="password" id="config-api-key" placeholder="sk-xxxxxxxxxxxxx" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="config-base-url">Base URL</label>
+          <input type="text" id="config-base-url" placeholder="https://api.openai.com/v1">
+        </div>
+
+        <div class="form-group">
+          <label for="config-model">Model</label>
+          <input type="text" id="config-model" placeholder="gpt-4o">
+        </div>
+
+        <div class="presets">
+          <span class="presets-label">快捷预设：</span>
+          <button class="preset-btn" data-base-url="https://api.openai.com/v1" data-model="gpt-4o">OpenAI</button>
+          <button class="preset-btn" data-base-url="https://api.deepseek.com/v1" data-model="deepseek-chat">DeepSeek</button>
+          <button class="preset-btn" data-base-url="https://open.bigmodel.cn/api/paas/v4" data-model="glm-4">智谱</button>
+        </div>
+
+        <p class="security-note">ℹ 密钥仅存储在本地浏览器，不会上传到任何服务器</p>
+
+      </div>
+
+      <div class="modal-footer">
+        <button id="config-cancel" class="btn-secondary">取消</button>
+        <button id="config-save" class="btn-primary">保存配置</button>
+      </div>
+
+    </div>
+  </div>
+
+  <noscript>
+    <p style="text-align: center; margin-top: 40px; color: #ccc;">
+      本应用需要 JavaScript 支持，请启用后刷新。
+    </p>
+  </noscript>
+
+  <script src="app.js"></script>
+</body>
+</html>
