@@ -18,7 +18,7 @@
     </svg>
   </button>
 
-  <!-- ===== 主内容区 ===== -->
+  <!-- ===== 主内容区（搜索页） ===== -->
   <main class="main-content">
 
     <!-- 搜索区 -->
@@ -51,25 +51,50 @@
       <button id="retry-btn" class="retry-btn">重试</button>
     </section>
 
-    <!-- 渲染区（初始隐藏） -->
-    <section id="result-section" class="result-section hidden">
-      <div class="result-toolbar">
-        <span class="result-label">生成结果</span>
-        <div class="result-actions">
-          <button id="open-new-tab-btn" class="tool-btn" title="在新标签页打开">↗ 新标签页</button>
-          <button id="regenerate-btn" class="tool-btn" title="重新生成">↻ 重新生成</button>
-        </div>
-      </div>
-      <iframe
-        id="result-frame"
-        class="result-frame"
-        sandbox="allow-scripts allow-forms allow-modals"
-        srcdoc=""
-        title="生成的页面"
-      ></iframe>
-    </section>
-
   </main>
+
+  <!-- ===== 全屏结果区（初始隐藏） ===== -->
+  <section id="result-section" class="result-section hidden">
+
+    <!-- 顶部工具栏 -->
+    <div class="result-toolbar">
+      <button id="back-btn" class="back-btn" title="返回首页">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        <span>返回</span>
+      </button>
+
+      <form id="correction-form" class="correction-bar" autocomplete="off">
+        <input
+          type="text"
+          id="correction-input"
+          class="correction-input"
+          placeholder="描述需要修正的内容，如：按钮颜色改为红色"
+          aria-label="修正描述"
+        >
+        <button type="submit" id="correction-btn" class="correction-btn"><span class="btn-text">修正</span></button>
+      </form>
+
+      <button id="open-new-tab-btn" class="icon-btn" title="在新标签页打开">↗</button>
+    </div>
+
+    <!-- 修正进度条（初始隐藏） -->
+    <div id="correction-progress" class="correction-progress hidden">
+      <div id="correction-progress-bar" class="correction-progress-bar" style="width: 0%"></div>
+    </div>
+
+    <!-- iframe 渲染区 -->
+    <iframe
+      id="result-frame"
+      class="result-frame"
+      sandbox="allow-scripts allow-forms allow-modals"
+      srcdoc=""
+      title="生成的页面"
+    ></iframe>
+
+  </section>
 
   <!-- ===== 设置面板（模态框，初始隐藏） ===== -->
   <div id="settings-modal" class="modal-overlay modal-hidden">
@@ -115,6 +140,9 @@
 
     </div>
   </div>
+
+  <!-- ===== Toast 通知 ===== -->
+  <div id="toast" class="toast hidden"></div>
 
   <noscript>
     <p style="text-align: center; margin-top: 40px; color: #ccc;">

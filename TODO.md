@@ -208,13 +208,16 @@
 **验证：** 端到端测试——输入"一个番茄钟计时器"，能看到流式生成进度，最终在 iframe 中渲染出可用的番茄钟页面
 
 **✅ 已完成。** 实现细节：
-- `handleGenerate(query)` 串联全流程：禁用输入 → 显示进度 → 流式接收 → 渲染 iframe
-- 进度估算：每 500 字符 +5%，上限 95%；完成时设 100% + 500ms 延迟后切换到渲染区
-- `lastQuery` / `lastHtml` 缓存上次查询，支持重试和重新生成
-- `#retry-btn` 和 `#regenerate-btn` 都调用 `handleGenerate(lastQuery)`
-- `#open-new-tab-btn` 用 `window.open()` + `document.write()` 在新标签页打开
-- 错误时隐藏进度区、显示错误区、恢复输入
-- `body.has-result` 触发搜索区缩小上移
+- `streamGenerate(messages, onChunk)` 改为接收 messages 数组，支持上下文修正
+- `conversationHistory` 维护完整对话历史（system + user + assistant + user 修正...）
+- `handleGenerate(query)` 首次生成：构建 messages → 流式生成 → 全屏显示结果
+- `handleCorrection(correction)` 修正流程：追加 user 消息 → 流式生成 → 更新 iframe
+- 修正失败时 `conversationHistory.pop()` 回滚，Toast 提示错误
+- 全屏结果区 `position: fixed` 覆盖整个视口
+- 顶部工具栏：← 返回按钮 + 修正输入框 + 修正确认按钮 + ↗ 新标签页
+- 修正进度条：工具栏下方 3px 细条
+- `goBack()` 返回首页，清空对话历史和输入框
+- `showToast()` 底部弹出错误提示，4 秒自动消失
 
 ---
 

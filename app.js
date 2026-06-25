@@ -96,7 +96,7 @@ function buildUserPrompt(query) {
 
 /* ===== LLM 流式调用 ===== */
 
-async function streamGenerate(query, onChunk) {
+async function streamGenerate(messages, onChunk) {
   const config = getConfig();
 
   if (!config.apiKey) {
@@ -115,10 +115,7 @@ async function streamGenerate(query, onChunk) {
       },
       body: JSON.stringify({
         model: config.model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(query) }
-        ],
+        messages: messages,
         stream: true
       })
     });
@@ -168,7 +165,6 @@ async function streamGenerate(query, onChunk) {
         const content = json.choices?.[0]?.delta?.content;
         if (!content) continue;
 
-        // 过滤 markdown 代码块标记
         let cleaned = content;
         if (cleaned.includes('```')) {
           if (cleaned.includes('```html')) {
@@ -193,8 +189,9 @@ async function streamGenerate(query, onChunk) {
 
 /* ===== 前端交互与渲染 ===== */
 
-let lastQuery = '';
+let conversationHistory = [];
 let lastHtml = '';
+let lastQuery = '';
 
 function handleGenerate(query) {
   if (!query.trim()) return;
@@ -206,35 +203,34 @@ function handleGenerate(query) {
   }
 
   lastQuery = query;
+  conversationHistory = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: buildUserPrompt(query) }
+  ];
 
   const input = document.getElementById('search-input');
   const btn = document.getElementById('generate-btn');
   const progressSection = document.getElementById('progress-section');
   const progressBar = document.getElementById('progress-bar');
   const progressText = document.getElementById('progress-text');
-  const resultSection = document.getElementById('result-section');
   const errorSection = document.getElementById('error-section');
 
   input.disabled = true;
   btn.disabled = true;
   btn.classList.add('loading');
 
-  resultSection.classList.add('hidden');
   errorSection.classList.add('hidden');
   progressSection.classList.remove('hidden');
   progressBar.style.width = '0%';
   progressBar.classList.add('pulsing');
   progressText.textContent = '准备生成...';
 
-  document.body.classList.remove('has-result');
-
   let html = '';
   let charCount = 0;
 
-  streamGenerate(query, (chunk) => {
+  streamGenerate(conversationHistory, (chunk) => {
     html += chunk;
     charCount += chunk.length;
-
     const progress = Math.min(95, Math.floor(charCount / 500) * 5);
     progressBar.style.width = `${progress}%`;
     progressText.textContent = `已生成 ${charCount} 字符...`;
@@ -244,13 +240,13 @@ function handleGenerate(query) {
     progressText.textContent = '生成完成！正在渲染...';
 
     lastHtml = html;
+    conversationHistory.push({ role: 'assistant', content: html });
 
     setTimeout(() => {
       progressSection.classList.add('hidden');
       const frame = document.getElementById('result-frame');
       frame.srcdoc = html;
-      resultSection.classList.remove('hidden');
-      document.body.classList.add('has-result');
+      document.getElementById('result-section').classList.remove('hidden');
       input.disabled = false;
       btn.disabled = false;
       btn.classList.remove('loading');
@@ -265,6 +261,65 @@ function handleGenerate(query) {
   });
 }
 
+function handleCorrection(correction) {
+  if (!correction.trim()) return;
+
+  conversationHistory.push({ role: 'user', content: correction });
+
+  const correctionInput = document.getElementById('correction-input');
+  const correctionBtn = document.getElementById('correction-btn');
+  const progressDiv = document.getElementById('correction-progress');
+  const progressBar = document.getElementById('correction-progress-bar');
+
+  correctionInput.disabled = true;
+  correctionBtn.disabled = true;
+  correctionBtn.classList.add('loading');
+  progressDiv.classList.remove('hidden');
+  progressBar.style.width = '0%';
+  progressBar.classList.add('pulsing');
+
+  let html = '';
+  let charCount = 0;
+
+  streamGenerate(conversationHistory, (chunk) => {
+    html += chunk;
+    charCount += chunk.length;
+    const progress = Math.min(95, Math.floor(charCount / 500) * 5);
+    progressBar.style.width = `${progress}%`;
+  }).then(() => {
+    progressBar.style.width = '100%';
+    progressBar.classList.remove('pulsing');
+
+    lastHtml = html;
+    conversationHistory.push({ role: 'assistant', content: html });
+
+    setTimeout(() => {
+      const frame = document.getElementById('result-frame');
+      frame.srcdoc = html;
+      progressDiv.classList.add('hidden');
+      correctionInput.disabled = false;
+      correctionBtn.disabled = false;
+      correctionBtn.classList.remove('loading');
+      correctionInput.value = '';
+    }, 300);
+  }).catch((err) => {
+    conversationHistory.pop();
+    progressDiv.classList.add('hidden');
+    correctionInput.disabled = false;
+    correctionBtn.disabled = false;
+    correctionBtn.classList.remove('loading');
+    showToast(err.message);
+  });
+}
+
+function goBack() {
+  document.getElementById('result-section').classList.add('hidden');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-input').focus();
+  conversationHistory = [];
+  lastHtml = '';
+}
+
 function openInNewTab() {
   if (!lastHtml) return;
   const newTab = window.open('', '_blank');
@@ -272,6 +327,14 @@ function openInNewTab() {
     newTab.document.write(lastHtml);
     newTab.document.close();
   }
+}
+
+function showToast(message, duration = 4000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.remove('hidden');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.add('hidden'), duration);
 }
 
 /* ===== 初始化 ===== */
@@ -301,11 +364,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lastQuery) handleGenerate(lastQuery);
   });
 
-  document.getElementById('open-new-tab-btn').addEventListener('click', openInNewTab);
+  document.getElementById('back-btn').addEventListener('click', goBack);
 
-  document.getElementById('regenerate-btn').addEventListener('click', () => {
-    if (lastQuery) handleGenerate(lastQuery);
-  });
+  const correctionForm = document.getElementById('correction-form');
+  if (correctionForm) {
+    correctionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const correction = document.getElementById('correction-input').value;
+      handleCorrection(correction);
+    });
+  }
+
+  document.getElementById('open-new-tab-btn').addEventListener('click', openInNewTab);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSettings();

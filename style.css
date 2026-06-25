@@ -29,6 +29,7 @@ body {
   background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
   color: var(--text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .hidden {
@@ -77,34 +78,18 @@ body {
   align-items: center;
   padding-top: 15vh;
   gap: 12px;
-  transition: all 0.5s ease;
-}
-
-/* 搜索区在有结果时缩小上移 */
-body.has-result .search-section {
-  padding-top: 4vh;
-}
-
-body.has-result .logo {
-  font-size: 1.6rem;
-}
-
-body.has-result .tagline {
-  font-size: 0.85rem;
 }
 
 .logo {
   font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: -1px;
-  transition: font-size 0.5s ease;
 }
 
 .tagline {
   color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 8px;
-  transition: font-size 0.5s ease;
 }
 
 .search-bar {
@@ -151,7 +136,6 @@ body.has-result .tagline {
   cursor: pointer;
   transition: all var(--transition);
   white-space: nowrap;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,7 +157,6 @@ body.has-result .tagline {
   opacity: 0.7;
 }
 
-/* 生成按钮 loading 状态 */
 .generate-btn.loading {
   pointer-events: none;
 }
@@ -215,7 +198,6 @@ body.has-result .tagline {
   transition: width 0.3s ease;
 }
 
-/* 进度条脉冲动画 */
 .progress-bar-fill.pulsing {
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -259,53 +241,170 @@ body.has-result .tagline {
   color: white;
 }
 
-/* ===== Result Section ===== */
+/* ===== Full-Screen Result Section ===== */
 .result-section {
-  margin-top: 30px;
-  flex: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 150;
+  background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  animation: fadeInUp 0.5s ease;
+  animation: fadeIn 0.3s ease;
 }
 
+/* ===== Result Toolbar ===== */
 .result-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-.result-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.result-actions {
+.back-btn {
   display: flex;
-  gap: 8px;
-}
-
-.tool-btn {
-  padding: 6px 14px;
-  font-size: 0.85rem;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
+  font-size: 0.9rem;
   transition: all var(--transition);
+  white-space: nowrap;
 }
 
-.tool-btn:hover {
+.back-btn:hover {
   border-color: var(--accent);
   color: var(--text-primary);
 }
 
-.result-frame {
-  width: 100%;
-  height: 60vh;
+/* ===== Correction Bar ===== */
+.correction-bar {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  max-width: 600px;
+}
+
+.correction-input {
+  flex: 1;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.correction-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.correction-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.correction-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.correction-btn {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+}
+
+.correction-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.correction-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.correction-btn.loading {
+  pointer-events: none;
+}
+
+.correction-btn.loading::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.correction-btn.loading .btn-text {
+  display: none;
+}
+
+/* ===== Icon Button ===== */
+.icon-btn {
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ===== Correction Progress ===== */
+.correction-progress {
+  height: 3px;
+  background: var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.correction-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  transition: width 0.3s ease;
+}
+
+.correction-progress-bar.pulsing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== Result Frame ===== */
+.result-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
   background: white;
 }
 
@@ -327,7 +426,6 @@ body.has-result .tagline {
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-/* 模态框隐藏状态（用 opacity+visibility 替代 display:none 以支持过渡） */
 .modal-overlay.modal-hidden {
   opacity: 0;
   visibility: hidden;
@@ -494,43 +592,47 @@ body.has-result .tagline {
   background: var(--accent-hover);
 }
 
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--danger);
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  z-index: 300;
+  animation: fadeInUp 0.3s ease;
+  max-width: 90%;
+  text-align: center;
+}
+
 /* ===== Keyframes ===== */
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-6px);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(6px);
-  }
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
 }
 
 /* ===== Responsive ===== */
@@ -553,5 +655,16 @@ body.has-result .tagline {
 
   .modal-content {
     width: 95%;
+  }
+
+  .result-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .correction-bar {
+    order: 3;
+    width: 100%;
+    max-width: none;
   }
 }
