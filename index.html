@@ -10,13 +10,25 @@
 </head>
 <body>
 
-  <!-- ===== 设置按钮（固定右上角） ===== -->
-  <button id="settings-btn" class="settings-btn" title="API 配置" aria-label="打开设置">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  </button>
+  <!-- ===== 顶部栏（模型切换 + 设置按钮） ===== -->
+  <div class="top-bar">
+    <div class="model-switcher">
+      <button id="model-switch-btn" class="model-switch-btn" title="切换模型">
+        <span class="model-dot"></span>
+        <span id="current-model-name">未配置</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <div id="model-dropdown" class="model-dropdown hidden"></div>
+    </div>
+    <button id="settings-btn" class="settings-btn" title="API 配置" aria-label="打开设置">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- ===== 主内容区（搜索页） ===== -->
   <main class="main-content">
@@ -109,6 +121,28 @@
 
       <div class="modal-body">
 
+        <!-- 配置选择器 -->
+        <div class="config-selector-row">
+          <select id="config-select" class="config-select"></select>
+          <button id="config-new" class="btn-icon-sm" title="新建配置">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+          <button id="config-delete" class="btn-icon-sm btn-icon-danger" title="删除配置" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="config-name">配置名称</label>
+          <input type="text" id="config-name" placeholder="如：我的 OpenAI" autocomplete="off">
+        </div>
+
         <div class="form-group">
           <label for="config-api-key">API Key</label>
           <input type="password" id="config-api-key" placeholder="sk-xxxxxxxxxxxxx" autocomplete="off">
@@ -126,9 +160,9 @@
 
         <div class="presets">
           <span class="presets-label">快捷预设：</span>
-          <button class="preset-btn" data-base-url="https://api.openai.com/v1" data-model="gpt-4o">OpenAI</button>
-          <button class="preset-btn" data-base-url="https://api.deepseek.com/v1" data-model="deepseek-chat">DeepSeek</button>
-          <button class="preset-btn" data-base-url="https://open.bigmodel.cn/api/paas/v4" data-model="glm-4">智谱</button>
+          <button class="preset-btn" data-name="OpenAI" data-base-url="https://api.openai.com/v1" data-model="gpt-4o">OpenAI</button>
+          <button class="preset-btn" data-name="DeepSeek" data-base-url="https://api.deepseek.com/v1" data-model="deepseek-chat">DeepSeek</button>
+          <button class="preset-btn" data-name="智谱GLM" data-base-url="https://open.bigmodel.cn/api/paas/v4" data-model="glm-4">智谱</button>
         </div>
 
         <p class="security-note">ℹ 密钥仅存储在本地浏览器，不会上传到任何服务器</p>
@@ -137,6 +171,7 @@
 
       <div class="modal-footer">
         <button id="config-cancel" class="btn-secondary">取消</button>
+        <button id="config-set-active" class="btn-secondary" disabled>设为当前</button>
         <button id="config-save" class="btn-primary">保存配置</button>
       </div>
 

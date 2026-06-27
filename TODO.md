@@ -297,14 +297,3 @@
 1. `git push` 推送到 GitHub 仓库
 2. 仓库 Settings → Pages → Source: main branch, Folder: / (root)
 3. 等待部署，访问 `https://mingdedi.github.io` 验证
-
----
-
-## 完成标志
-
-当以下全部满足时，原型完成：
-- [ ] 输入查询 → 流式生成 → iframe 渲染，全链路通畅
-- [ ] 至少 5 种不同类型页面都能正确生成和渲染
-- [ ] 错误情况不会导致页面崩溃
-- [ ] 移动端可正常使用
-- [ ] 已部署到 GitHub Pages 可公开访问
