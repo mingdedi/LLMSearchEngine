@@ -406,7 +406,6 @@ async function streamGenerate(messages, onChunk) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-  let inCodeBlock = false;
   let htmlStarted = false;
   let preBuffer = '';
 
@@ -424,7 +423,12 @@ async function streamGenerate(messages, onChunk) {
       if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
       const data = trimmed.slice(6);
-      if (data === '[DONE]') return;
+      if (data === '[DONE]') {
+        if (!htmlStarted) {
+          throw new Error('模型未返回有效的 HTML 代码，请重试或更换模型');
+        }
+        return;
+      }
 
       try {
         const json = JSON.parse(data);
@@ -435,11 +439,9 @@ async function streamGenerate(messages, onChunk) {
         if (cleaned.includes('```')) {
           if (cleaned.includes('```html')) {
             cleaned = cleaned.replace(/```html\n?/g, '');
-            inCodeBlock = true;
           }
           if (cleaned.includes('```')) {
             cleaned = cleaned.replace(/```/g, '');
-            inCodeBlock = false;
           }
         }
 
@@ -460,6 +462,10 @@ async function streamGenerate(messages, onChunk) {
         // JSON 解析失败，跳过不完整的 chunk
       }
     }
+  }
+
+  if (!htmlStarted) {
+    throw new Error('模型未返回有效的 HTML 代码，请重试或更换模型');
   }
 }
 
