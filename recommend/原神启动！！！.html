@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原神 启动！</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 开场动画 */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-text {
+            font-size: clamp(2rem, 8vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #f0c27f, #4b6cb7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: introAppear 1.5s ease forwards;
+            text-align: center;
+        }
+
+        @keyframes introAppear {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 主内容 */
+        .main-container {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 动态背景 */
+        .dynamic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 20% 50%, #1a1a4e 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 50%, #4a1942 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 100%, #0d2b45 0%, transparent 50%),
+                        #0a0a1a;
+            z-index: -1;
+        }
+
+        /* 粒子画布 */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f0c27f, #e8a849);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(240, 194, 127, 0.5);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+        }
+
+        /* 主启动区域 */
+        .launch-section {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            padding: 40px 20px;
+        }
+
+        .launch-title {
+            font-size: clamp(3rem, 12vw, 10rem);
+            font-weight: 900;
+            text-align: center;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .launch-title .line1 {
+            display: block;
+            background: linear-gradient(135deg, #f0c27f, #e8a849, #f5d799);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(240, 194, 127, 0.3));
+        }
+
+        .launch-title .line2 {
+            display: block;
+            font-size: 0.5em;
+            color: #fff;
+            -webkit-text-fill-color: #fff;
+            letter-spacing: 20px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .launch-btn {
+            position: relative;
+            padding: 20px 80px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #000;
+            background: linear-gradient(135deg, #f0c27f, #e8a849, #f5d799);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(240, 194, 127, 0.4),
+                        0 0 60px rgba(240, 194, 127, 0.2);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .launch-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: btnShine 3s infinite;
+        }
+
+        @keyframes btnShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .launch-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 20px 60px rgba(240, 194, 127, 0.6),
+                        0 0 80px rgba(240, 194, 127, 0.3);
+        }
+
+        .launch-btn:active {
+            transform: scale(0.95);
+        }
+
+        .launch-btn.launched {
+            animation: launchPulse 0.5s ease;
+        }
+
+        @keyframes launchPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 梗语录区域 */
+        .meme-section {
+            position: relative;
+            z-index: 10;
+            padding: 60px 20px;
+        }
+
+        .meme-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.7;
+        }
+
+        .meme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .meme-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meme-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(240, 194, 127, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .meme-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(240, 194, 127, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .meme-card:hover::before {
+            opacity: 1;
+        }
+
+        .meme-emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .meme-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #f0c27f;
+        }
+
+        .meme-desc {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            line-height: 1.6;
+        }
+
+        /* 弹幕区域 */
+        .danmaku-section {
+            position: relative;
+            z-index: 10;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .danmaku-input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .danmaku-input {
+            padding: 15px 25px;
+            font-size: 1rem;
+            border: 2px solid rgba(240, 194, 127, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-radius: 30px;
+            width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .danmaku-input:focus {
+            border-color: #f0c27f;
+            box-shadow: 0 0 20px rgba(240, 194, 127, 0.2);
+        }
+
+        .danmaku-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .danmaku-btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #000;
+            background: linear-gradient(135deg, #f0c27f, #e8a849);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .danmaku-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(240, 194, 127, 0.3);
+        }
+
+        .danmaku-stage {
+            position: relative;
+            height: 400px;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .danmaku-item {
+            position: absolute;
+            white-space: nowrap;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            animation: danmakuMove linear forwards;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .danmaku-item:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes danmakuMove {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100vw); }
+        }
+
+        /* 抽卡区域 */
+        .gacha-section {
+            position: relative;
+            z-index: 10;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .gacha-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f0c27f, #e8a849);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gacha-subtitle {
+            opacity: 0.5;
+            margin-bottom: 30px;
+        }
+
+        .gacha-machine {
+            display: inline-block;
+            position: relative;
+            width: 300px;
+            height: 350px;
+            background: linear-gradient(180deg, #2a1a4e, #1a0a2e);
+            border-radius: 30px;
+            border: 3px solid #f0c27f;
+            box-shadow: 0 0 40px rgba(240, 194, 127, 0.3),
+                        inset 0 0 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .gacha-glass {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            overflow: hidden;
+        }
+
+        .gacha-ball {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f0c27f, #e8a849);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(240, 194, 127, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .gacha-pull-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #000;
+            background: linear-gradient(135deg, #f0c27f, #e8a849);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(240, 194, 127, 0.4);
+        }
+
+        .gacha-pull-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .gacha-pull-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .gacha-result {
+            margin-top: 30px;
+            font-size: 1.5rem;
+            min-height: 50px;
+        }
+
+        .result-5star {
+            color: #f0c27f;
+            text-shadow: 0 0 20px rgba(240, 194, 127, 0.5);
+            animation: sparkle 1s ease infinite;
+        }
+
+        .result-4star {
+            color: #c084fc;
+            text-shadow: 0 0 20px rgba(192, 132, 252, 0.5);
+        }
+
+        .result-3star {
+            color: #60a5fa;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .gacha-stats {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #f0c27f;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        /* 底部 */
+        .footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.3;
+            font-size: 0.9rem;
+        }
+
+        /* 飘落文字 */
+        .falling-text {
+            position: fixed;
+            z-index: 5;
+            font-weight: 900;
+            pointer-events: none;
+            animation: textFall linear forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes textFall {
+            from {
+                transform: translateY(-100px) rotate(var(--rotate));
+                opacity: 1;
+            }
+            to {
+                transform: translateY(110vh) rotate(var(--rotate));
+                opacity: 0;
+            }
+        }
+
+        /* 启动特效叠加 */
+        .launch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .launch-flash {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(240, 194, 127, 0.8) 0%, transparent 70%);
+            opacity: 0;
+            animation: flashBurst 1s ease-out;
+        }
+
+        @keyframes flashBurst {
+            0% { opacity: 1; transform: scale(0); }
+            100% { opacity: 0; transform: scale(3); }
+        }
+
+        .launch-text-burst {
+            font-size: clamp(3rem, 15vw, 12rem);
+            font-weight: 900;
+            color: #f0c27f;
+            text-shadow: 0 0 100px rgba(240, 194, 127, 0.8);
+            animation: textBurst 2s ease-out forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes textBurst {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        /* 音量指示器 */
+        .volume-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .volume-indicator:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* 计数器 */
+        .launch-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(240, 194, 127, 0.3);
+            border-radius: 15px;
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .counter-label {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .counter-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #f0c27f;
+        }
+
+        @media (max-width: 768px) {
+            .meme-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .danmaku-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 开场动画 -->
+    <div class="intro-overlay" id="introOverlay">
+        <div class="intro-text">原神 启动！</div>
+    </div>
+
+    <!-- 启动特效层 -->
+    <div class="launch-overlay" id="launchOverlay" style="display: none;"></div>
+
+    <!-- 动态背景 -->
+    <div class="dynamic-bg"></div>
+
+    <!-- 粒子画布 -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- 启动计数器 -->
+    <div class="launch-counter">
+        <div class="counter-label">启动次数</div>
+        <div class="counter-value" id="launchCount">0</div>
+    </div>
+
+    <!-- 音量指示器 -->
+    <div class="volume-indicator" id="volumeBtn" title="点击播放/暂停音乐">
+        🔊
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo-icon">✦</div>
+                <div class="logo-text">GENSHIN IMPACT</div>
+            </div>
+        </header>
+
+        <!-- 主启动区域 -->
+        <section class="launch-section">
+            <h1 class="launch-title">
+                <span class="line1">原神</span>
+                <span class="line2">启 动</span>
+            </h1>
+            <button class="launch-btn" id="launchBtn">
+                ✦ 点击启动 ✦
+            </button>
+        </section>
+
+        <!-- 梗语录区域 -->
+        <section class="meme-section">
+            <h2 class="meme-title">经典语录收藏</h2>
+            <div class="meme-grid">
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="meme-emoji">🎮</div>
+                    <div class="meme-text">原神，启动！</div>
+                    <div class="meme-desc">当你的朋友问你在干嘛时的标准回答</div>
+                </div>
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="meme-emoji">✨</div>
+                    <div class="meme-text">天空一声巨响</div>
+                    <div class="meme-desc">天动万象！帝君一出手，便知有没有</div>
+                </div>
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="meme-emoji">⚔️</div>
+                    <div class="meme-text">在提瓦特大陆</div>
+                    <div class="meme-desc">在这片广袤的大陆上，到处都是没有被我探索的地方</div>
+                </div>
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="memo-emoji">🎭</div>
+                    <div class="meme-text">旅行者，你醒啦</div>
+                    <div class="meme-desc">你已经睡了一年了（版本更新ing）</div>
+                </div>
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="meme-emoji">🌟</div>
+                    <div class="meme-text">我是神里绫华的狗！</div>
+                    <div class="meme-desc">绫华大小姐，想跟你一起去看烟花</div>
+                </div>
+                <div class="meme-card" onclick="this.style.transform='scale(0.95)'; setTimeout(()=>this.style.transform='', 200)">
+                    <div class="meme-emoji">💰</div>
+                    <div class="meme-text">你又歪了？</div>
+                    <div class="meme-desc">七七满命警告⚠️ 这就是氪金的力量吗</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 弹幕区域 -->
+        <section class="danmaku-section">
+            <h2 class="meme-title">✦ 发射弹幕 ✦</h2>
+            <div class="danmaku-input-group">
+                <input type="text" class="danmaku-input" id="danmakuInput" placeholder="输入弹幕内容..." maxlength="30">
+                <button class="danmaku-btn" id="danmakuBtn">发射！</button>
+            </div>
+            <div class="danmaku-stage" id="danmakuStage"></div>
+        </section>
+
+        <!-- 抽卡区域 -->
+        <section class="gacha-section">
+            <h2 class="gacha-title">✦ 原神抽卡模拟器 ✦</h2>
+            <p class="gacha-subtitle">感受小保底不歪的快乐（才怪）</p>
+            
+            <div class="gacha-machine">
+                <div class="gacha-glass" id="gachaGlass">
+                    <div class="gacha-ball" id="gachaBall">✦</div>
+                </div>
+                <button class="gacha-pull-btn" id="gachaBtn">祈愿一次</button>
+            </div>
+            
+            <div class="gacha-result" id="gachaResult"></div>
+            
+            <div class="gacha-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalPulls">0</div>
+                    <div class="stat-label">总祈愿次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pull5Star">0</div>
+                    <div class="stat-label">5星出货</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pull4Star">0</div>
+                    <div class="stat-label">4星出货</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pityCount">0</div>
+                    <div class="stat-label">距离大保底</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部 -->
+        <footer class="footer">
+            <p>本页面纯属娱乐，与米哈游无关</p>
+            <p style="margin-top: 10px;">「愿你的小保底永远不歪」</p>
+        </footer>
+    </div>
+
+    <script>
+        // ========== 初始化 ==========
+        let launchCount = 0;
+        let isPlaying = true;
+        let audioCtx = null;
+
+        // ========== 开场动画 ==========
+        setTimeout(() => {
+            document.getElementById('introOverlay').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('introOverlay').style.display = 'none';
+            }, 500);
+        }, 2000);
+
+        // ========== 粒子系统 ==========
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor(x, y, color, size, speedX, speedY, life) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.color = color || `hsl(${40 + Math.random() * 20}, 80%, ${60 + Math.random() * 20}%)`;
+                this.size = size || Math.random() * 3 + 1;
+                this.speedX = speedX || (Math.random() - 0.5) * 0.5;
+                this.speedY = speedY || -Math.random() * 1 - 0.5;
+                this.life = life || 100 + Math.random() * 100;
+                this.maxLife = this.life;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life--;
+                this.opacity = this.life / this.maxLife;
+                
+                if (this.life <= 0) {
+                    return false;
+                }
+                
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    return false;
+                }
+                
+                return true;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 初始粒子
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles = particles.filter(p => {
+                const alive = p.update();
+                if (alive) p.draw();
+                return alive;
+            });
+
+            // 保持粒子数量
+            while (particles.length < 30) {
+                particles.push(new Particle());
+            }
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        // ========== 音效系统（使用 Web Audio API）==========
+        function createAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        function playLaunchSound() {
+            const ctx = createAudioContext();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.setValueAtTime(400, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.5);
+        }
+
+        function playGachaSound() {
+            const ctx = createAudioContext();
+            
+            // 创建一段简短的音效
+            [523, 659, 784, 1047].forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+                
+                gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
+                
+                osc.start(ctx.currentTime + i * 0.1);
+                osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+            });
+        }
+
+        // ========== 启动按钮 ==========
+        document.getElementById('launchBtn').addEventListener('click', function() {
+            launchCount++;
+            document.getElementById('launchCount').textContent = launchCount;
+            
+            // 播放音效
+            try { playLaunchSound(); } catch(e) {}
+            
+            // 按钮动画
+            this.classList.remove('launched');
+            void this.offsetWidth; // 触发重绘
+            this.classList.add('launched');
+            
+            // 创建启动特效
+            const overlay = document.getElementById('launchOverlay');
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="launch-flash"></div>
+                <div class="launch-text-burst">原神启动！</div>
+            `;
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 2000);
+            
+            // 添加大量粒子
+            for (let i = 0; i < 50; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                particles.push(new Particle(
+                    window.innerWidth / 2,
+                    window.innerHeight / 2,
+                    `hsl(${40 + Math.random() * 20}, 100%, ${60 + Math.random() * 30}%)`,
+                    Math.random() * 5 + 2,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    50 + Math.random() * 50
+                ));
+            }
+            
+            // 飘落文字
+            const texts = ['原神', '启动', '✦', '⭐', '天动万象', '旅行者', '七七'];
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    createFallingText(texts[Math.floor(Math.random() * texts.length)]);
+                }, i * 100);
+            }
+        });
+
+        function createFallingText(text) {
+            const el = document.createElement('div');
+            el.className = 'falling-text';
+            el.textContent = text;
+            el.style.left = Math.random() * 100 + '%';
+            el.style.fontSize = (1 + Math.random() * 2) + 'rem';
+            el.style.color = `hsl(${40 + Math.random() * 20}, 80%, ${60 + Math.random() * 20}%)`;
+            el.style.setProperty('--rotate', (Math.random() * 30 - 15) + 'deg');
+            el.style.animationDuration = (3 + Math.random() * 2) + 's';
+            document.body.appendChild(el);
+            
+            setTimeout(() => {
+                el.remove();
+            }, 5000);
+        }
+
+        // ========== 弹幕系统 ==========
+        const danmakuColors = [
+            '#f0c27f', '#60a5fa', '#c084fc', '#4ade80', '#f87171',
+            '#fbbf24', '#a78bfa', '#34d399', '#fb923c', '#e879f9'
+        ];
+
+        function sendDanmaku(text) {
+            const stage = document.getElementById('danmakuStage');
+            const danmaku = document.createElement('div');
+            danmaku.className = 'danmaku-item';
+            danmaku.textContent = text;
+            danmaku.style.top = Math.random() * 350 + 'px';
+            danmaku.style.color = danmakuColors[Math.floor(Math.random() * danmakuColors.length)];
+            danmaku.style.fontSize = (0.9 + Math.random() * 0.6) + 'rem';
+            danmaku.style.background = `rgba(0, 0, 0, 0.3)`;
+            danmaku.style.animationDuration = (5 + Math.random() * 5) + 's';
+            
+            danmaku.addEventListener('click', function() {
+                this.style.transform = 'scale(1.3)';
+                this.style.opacity = '0';
+                setTimeout(() => this.remove(), 300);
+            });
+            
+            stage.appendChild(danmaku);
+            
+            setTimeout(() => {
+                danmaku.remove();
+            }, 10000);
+        }
+
+        // 预设弹幕
+        const presetDanmakus = [
+            '原神启动！', '天动万象！', '派蒙，最好的应急食品',
+            '这游戏真好玩', '我的原石呢？', '歪了歪了',
+            '七七满命了', '小保底不歪！', '神里绫华我爱你',
+            '班尼特永远的神', '甘雨天下第一', '钟离：此乃天道',
+            '刻晴：歪？', '可莉：哒哒哒', '胡桃：嘿嘿嘿',
+            '阿贝多：...', '空/荧：我又醒了？'
+        ];
+
+        // 初始弹幕
+        presetDanmakus.forEach((text, i) => {
+            setTimeout(() => sendDanmaku(text), i * 500);
+        });
+
+        // 持续发送弹幕
+        setInterval(() => {
+            if (Math.random() > 0.5) {
+                sendDanmaku(presetDanmakus[Math.floor(Math.random() * presetDanmakus.length)]);
+            }
+        }, 2000);
+
+        // 弹幕输入
+        document.getElementById('danmakuBtn').addEventListener('click', function() {
+            const input = document.getElementById('danmakuInput');
+            const text = input.value.trim();
+            if (text) {
+                sendDanmaku(text);
+                sendDanmaku(text); // 发两条更有气势
+                input.value = '';
+            }
+        });
+
+        document.getElementById('danmakuInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('danmakuBtn').click();
+            }
+        });
+
+        // ========== 抽卡系统 ==========
+        const characters = {
+            5: ['钟离', '雷电将军', '纳西妲', '芙宁娜', '枫原万叶', '神里绫华', '甘雨', '胡桃', '夜兰', '行秋(误)'],
+            4: ['班尼特', '香菱', '行秋', '砂糖', '迪奥娜', '菲谢尔', '北斗', '凝光', '诺艾尔', '芭芭拉'],
+            3: ['以理服人', '银剑', '冷刃', '飞天御剑', '讨龙英杰谭', '魔导绪论', '甲级宝珏', '弹弓']
+        };
+
+        let gachaStats = {
+            totalPulls: 0,
+            fiveStar: 0,
+            fourStar: 0,
+            pityCount: 90,
+            lastWas5Star: false
+        };
+
+        function doGacha() {
+            gachaStats.totalPulls++;
+            
+            let result;
+            let rarity;
+            const rand = Math.random() * 100;
+            
+            // 保底机制
+            const pityBonus = Math.max(0, (90 - gachaStats.pityCount) * 2);
+            
+            if (gachaStats.pityCount <= 0 || rand < (0.6 + pityBonus)) {
+                // 5星
+                rarity = 5;
+                result = characters[5][Math.floor(Math.random() * characters[5].length)];
+                gachaStats.fiveStar++;
+                gachaStats.pityCount = 90;
+                gachaStats.lastWas5Star = true;
+            } else if (rand < (0.6 + 5.1 + pityBonus / 2)) {
+                // 4星
+                rarity = 4;
+                result = characters[4][Math.floor(Math.random() * characters[4].length)];
+                gachaStats.fourStar++;
+                gachaStats.pityCount--;
+            } else {
+                // 3星
+                rarity = 3;
+                result = characters[3][Math.floor(Math.random() * characters[3].length)];
+                gachaStats.pityCount--;
+            }
+            
+            return { name: result, rarity: rarity };
+        }
+
+        document.getElementById('gachaBtn').addEventListener('click', function() {
+            this.disabled = true;
+            
+            try { playGachaSound(); } catch(e) {}
+            
+            const ball = document.getElementById('gachaBall');
+            ball.style.animation = 'none';
+            void ball.offsetWidth;
+            ball.style.animation = 'gachaSpin 0.5s ease';
+            
+            setTimeout(() => {
+                const result = doGacha();
+                const resultEl = document.getElementById('gachaResult');
+                
+                let colorClass;
+                let stars;
+                if (result.rarity === 5) {
+                    colorClass = 'result-5star';
+                    stars = '★★★★★';
+                    // 5星特效
+                    for (let i = 0; i < 20; i++) {
+                        setTimeout(() => {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = Math.random() * 3 + 1;
+                            particles.push(new Particle(
+                                window.innerWidth / 2,
+                                window.innerHeight * 0.7,
+                                `hsl(${40 + Math.random() * 20}, 100%, 70%)`,
+                                Math.random() * 4 + 2,
+                                Math.cos(angle) * speed,
+                                Math.sin(angle) * speed,
+                                80
+                            ));
+                        }, i * 50);
+                    }
+                } else if (result.rarity === 4) {
+                    colorClass = 'result-4star';
+                    stars = '★★★★';
+                } else {
+                    colorClass = 'result-3star';
+                    stars = '★★★';
+                }
+                
+                resultEl.innerHTML = `
+                    <div class="${colorClass}">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">${stars}</div>
+                        <div style="font-size: 2.5rem;">${result.name}</div>
+                        <div style="font-size: 1rem; opacity: 0.7; margin-top: 5px;">${result.rarity}星</div>
+                    </div>
+                `;
+                
+                // 更新统计
+                document.getElementById('totalPulls').textContent = gachaStats.totalPulls;
+                document.getElementById('pull5Star').textContent = gachaStats.fiveStar;
+                document.getElementById('pull4Star').textContent = gachaStats.fourStar;
+                document.getElementById('pityCount').textContent = gachaStats.pityCount;
+                
+                this.disabled = false;
+            }, 800);
+        });
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes gachaSpin {
+                0% { transform: rotate(0deg) scale(1); }
+                50% { transform: rotate(180deg) scale(0.5); }
+                100% { transform: rotate(360deg) scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ========== 音量按钮 ==========
+        document.getElementById('volumeBtn').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '🔊' : '🔇';
+        });
+
+        // ========== 鼠标跟随粒子 ==========
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            const dx = e.clientX - lastMouseX;
+            const dy = e.clientY - lastMouseY;
+            const speed = Math.sqrt(dx * dx + dy * dy);
+            
+            if (speed > 5) {
+                particles.push(new Particle(
+                    e.clientX,
+                    e.clientY,
+                    `hsl(${40 + Math.random() * 20}, 80%, ${60 + Math.random() * 20}%)`,
+                    Math.random() * 3 + 1,
+                    dx * 0.1,
+                    dy * 0.1,
+                    30
+                ));
+            }
+            
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        // ========== 自动飘落文字 ==========
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                const texts = ['原神', '启动', '✦', '派蒙', '天动万象', '旅行者'];
+                createFallingText(texts[Math.floor(Math.random() * texts.length)]);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

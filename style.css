@@ -911,6 +911,72 @@ body {
   20%, 40%, 60%, 80% { transform: translateX(6px); }
 }
 
+/* ===== Recommend Section ===== */
+.recommend-section {
+  margin-top: 48px;
+  padding-bottom: 48px;
+  animation: fadeInUp 0.5s ease;
+}
+
+.recommend-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.recommend-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
+
+.recommend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.recommend-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.recommend-card:hover {
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.recommend-card:active {
+  transform: translateY(-1px);
+}
+
+.recommend-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.recommend-card-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   .search-bar {

@@ -821,4 +821,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setInterval(rotateTagline, 2800);
+
+  /* ===== 创意推荐 ===== */
+  const recommendSites = [
+    { title: '一个贪吃蛇游戏', icon: '🐍', file: '一个贪吃蛇游戏.html' },
+    { title: '原神启动！！！', icon: '🎮', file: '原神启动！！！.html' },
+    { title: 'Windows模拟器', icon: '🪟', file: 'Windows模拟器.html' },
+    { title: 'iKun TV', icon: '📺', file: 'iKun TV.html' },
+    { title: '恭喜你中奖了', icon: '🎰', file: '恭喜你中奖了.html' },
+    { title: '禁书目录', icon: '📚', file: '禁书目录.html' },
+    { title: '摸鱼小游戏？', icon: '🐟', file: '摸鱼小游戏？.html' },
+    { title: 'What can I say？！', icon: '🏀', file: 'What can I say？！.html' },
+    { title: '一个关于超人主义的综合网站', icon: '🦸', file: '一个关于超人主义的综合网站.html' },
+  ];
+
+  const recommendGrid = document.getElementById('recommend-grid');
+  if (recommendGrid) {
+    recommendGrid.innerHTML = recommendSites.map(site =>
+      `<a class="recommend-card" href="recommend/${encodeURIComponent(site.file)}" target="_blank" rel="noopener">
+        <span class="recommend-card-icon">${site.icon}</span>
+        <span class="recommend-card-title">${site.title}</span>
+      </a>`
+    ).join('');
+  }
 });

@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 恭喜您获得神秘大奖！点击领取...</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow-x: hidden;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* 入口页面 */
+        #entry-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .prize-title {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        .prize-subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #fff;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .claim-btn {
+            padding: 18px 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            color: #333;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .claim-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255,215,0,0.6);
+        }
+
+        .claim-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-200%) rotate(45deg); }
+            100% { transform: translateX(200%) rotate(45deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* 恶搞页面 */
+        #troll-page {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 假进度条 */
+        #fake-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .loading-text {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff87, #60efff);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .progress-percent {
+            color: #00ff87;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 逃跑按钮 */
+        .escape-btn {
+            position: fixed;
+            padding: 12px 24px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 9999;
+            transition: none !important;
+            box-shadow: 0 5px 20px rgba(255,71,87,0.5);
+            white-space: nowrap;
+        }
+
+        /* 病毒警告 */
+        .virus-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(180deg, #000080, #0000aa);
+            color: white;
+            padding: 0;
+            border: 3px solid #fff;
+            z-index: 9998;
+            min-width: 320px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            animation: shake 0.1s infinite;
+        }
+
+        .virus-alert .title-bar {
+            background: linear-gradient(90deg, #000080, #0058a8);
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .virus-alert .close-btn {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .virus-alert .content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .virus-alert .warning-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0); }
+            25% { transform: translate(-50%, -50%) rotate(-1deg); }
+            75% { transform: translate(-50%, -50%) rotate(1deg); }
+        }
+
+        /* 蓝屏 */
+        .bsod {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0078d7;
+            color: white;
+            padding: 10% 10%;
+            z-index: 10001;
+            font-family: 'Segoe UI', sans-serif;
+            display: none;
+        }
+
+        .bsod .sad-face {
+            font-size: 8rem;
+            margin-bottom: 20px;
+        }
+
+        .bsod h1 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        .bsod .details {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.8;
+        }
+
+        .bsod .progress {
+            margin-top: 30px;
+        }
+
+        /* 页面抖动 */
+        .page-shake {
+            animation: pageShake 0.5s ease-in-out;
+        }
+
+        @keyframes pageShake {
+            0%, 100% { transform: translate(0); }
+            10% { transform: translate(-10px, -5px); }
+            20% { transform: translate(10px, 5px); }
+            30% { transform: translate(-5px, 10px); }
+            40% { transform: translate(5px, -10px); }
+            50% { transform: translate(-10px, 5px); }
+            60% { transform: translate(10px, -5px); }
+            70% { transform: translate(-5px, -10px); }
+            80% { transform: translate(5px, 10px); }
+            90% { transform: translate(-10px, -5px); }
+        }
+
+        /* 弹跳文字 */
+        .bouncing-text span {
+            display: inline-block;
+            animation: bounce 0.5s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* 反转文字 */
+        .flip-text {
+            transform: rotate(180deg);
+            display: inline-block;
+        }
+
+        /* 鼠标跟踪 */
+        #cursor-follower {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 9990;
+            font-size: 30px;
+            transition: transform 0.1s;
+        }
+
+        /* 广告弹窗 */
+        .ad-popup {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 9995;
+            overflow: hidden;
+            animation: popIn 0.3s ease;
+            max-width: 90vw;
+        }
+
+        .ad-popup .ad-header {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .ad-popup .ad-body {
+            padding: 20px;
+            color: #333;
+        }
+
+        .ad-close {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 滚动混乱 */
+        .scroll-chaos {
+            height: 500vh;
+            background: repeating-linear-gradient(
+                45deg,
+                #606dbc,
+                #606dbc 10px,
+                #465298 10px,
+                #465298 20px
+            );
+        }
+
+        /* 元素跟随 */
+        .follow-element {
+            position: fixed;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            pointer-events: none;
+            z-index: 9993;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* 最终彩蛋 */
+        #final-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a1a2e, #16213e);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10002;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .final-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            color: #ffd700;
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .final-text {
+            font-size: 1.2rem;
+            color: #aaa;
+            max-width: 500px;
+            line-height: 1.8;
+        }
+
+        .final-emoji {
+            font-size: 5rem;
+            margin: 30px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700; }
+            100% { text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px #ffd700; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* 打字效果 */
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #ffd700;
+            animation: blink-cursor 0.7s step-end infinite;
+        }
+
+        @keyframes blink-cursor {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: #ffd700; }
+        }
+
+        /* 彩虹文字 */
+        .rainbow-text {
+            background: linear-gradient(45deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 虚假按钮 */
+        .fake-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .fake-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /* 进度文字 */
+        .loading-messages {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            height: 20px;
+        }
+
+        /* 惊吓效果 */
+        .jump-scare {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10003;
+            display: none;
+        }
+
+        .jump-scare img {
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .scare-text {
+            color: #ff0000;
+            font-size: 8rem;
+            font-weight: 900;
+            animation: scare-pulse 0.1s infinite alternate;
+        }
+
+        @keyframes scare-pulse {
+            0% { transform: scale(1) rotate(-5deg); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* 禁用选择 */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .virus-alert {
+                width: 90%;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body class="no-select">
+    <!-- 入口页面 -->
+    <div id="entry-page">
+        <div style="font-size: 6rem; margin-bottom: 20px;">🎉</div>
+        <h1 class="prize-title">恭喜您！</h1>
+        <p class="prize-subtitle">您已被随机选中获得 <span style="color: #ffd700; font-weight: bold;">¥100,000,000</span> 神秘大奖！</p>
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 30px;">限时领取，过期作废！</p>
+        <button class="claim-btn" onclick="startTroll()">🎁 立即领取大奖</button>
+        <p style="margin-top: 20px; color: rgba(255,255,255,0.5); font-size: 0.8rem;">已有 1,234,567 人成功领取</p>
+    </div>
+
+    <!-- 恶搞页面 -->
+    <div id="troll-page">
+        <!-- 假加载 -->
+        <div id="fake-loading">
+            <div class="loading-text">正在加载您的大奖...</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+            <div class="loading-messages" id="loadingMessage"></div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div id="main-content" style="display:none; padding: 40px 20px; text-align: center;">
+            <h1 style="font-size: 2rem; margin-bottom: 30px;" class="rainbow-text">🎊 恭喜您中奖了！</h1>
+            <p style="color: #aaa; margin-bottom: 40px;">请完成以下步骤领取您的奖品</p>
+            
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 800px; margin: 0 auto;">
+                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 16px; flex: 1; min-width: 250px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">📱</div>
+                    <h3 style="margin-bottom: 10px;">验证手机</h3>
+                    <p style="color: #888; font-size: 0.9rem;">点击下方按钮验证</p>
+                    <button class="fake-button" onclick="showEscapeBtn(event)" style="margin-top: 15px;">立即验证</button>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 16px; flex: 1; min-width: 250px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">💳</div>
+                    <h3 style="margin-bottom: 10px;">填写银行卡</h3>
+                    <p style="color: #888; font-size: 0.9rem;">用于接收奖金</p>
+                    <button class="fake-button" onclick="showAd(event)" style="margin-top: 15px;">立即填写</button>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 16px; flex: 1; min-width: 250px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🎁</div>
+                    <h3 style="margin-bottom: 10px;">领取奖品</h3>
+                    <p style="color: #888; font-size: 0.9rem;">最后一步</p>
+                    <button class="fake-button" onclick="startFinalTroll()" style="margin-top: 15px;">立即领取</button>
+                </div>
+            </div>
+
+            <!-- 底部恶搞文字 -->
+            <div style="margin-top: 60px; padding: 30px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+                <h2 class="bouncing-text" style="font-size: 1.5rem; margin-bottom: 20px;">
+                    <span style="animation-delay: 0s;">你</span>
+                    <span style="animation-delay: 0.1s;">真</span>
+                    <span style="animation-delay: 0.2s;">的</span>
+                    <span style="animation-delay: 0.3s;">很</span>
+                    <span style="animation-delay: 0.4s;">有</span>
+                    <span style="animation-delay: 0.5s;">耐</span>
+                    <span style="animation-delay: 0.6s;">心</span>
+                    <span style="animation-delay: 0.7s;">呢</span>
+                    <span style="animation-delay: 0.8s;">~</span>
+                </h2>
+                <p style="color: #666;">(╯°□°)╯︵ ┻━┻</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 逃跑按钮 -->
+    <button class="escape-btn" id="escapeBtn" style="display:none;">关闭</button>
+
+    <!-- 病毒警告弹窗 -->
+    <div class="virus-alert" id="virusAlert" style="display:none;">
+        <div class="title-bar">
+            <span>⚠️ 警告</span>
+            <button class="close-btn" onclick="closeVirusAlert()">✕</button>
+        </div>
+        <div class="content">
+            <div class="warning-icon">⚠️</div>
+            <p style="font-size: 1.1rem; margin-bottom: 15px;">检测到您的电脑已被感染！</p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">发现 <span id="virusCount">42</span> 个病毒</p>
+            <button class="fake-button" style="background: #e74c3c; margin-top: 15px;" onclick="closeVirusAlert()">立即清理</button>
+        </div>
+    </div>
+
+    <!-- 广告弹窗 -->
+    <div class="ad-popup" id="adPopup" style="display:none;">
+        <div class="ad-header">
+            <span>🔥 特别优惠</span>
+            <button class="ad-close" onclick="closeAd()">✕</button>
+        </div>
+        <div class="ad-body">
+            <div style="font-size: 3rem; margin-bottom: 10px;">😜</div>
+            <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">恭喜你获得免费看广告的机会！</p>
+            <p style="color: #666; font-size: 0.9rem;">这个优惠价值连城，现在免费送给你</p>
+            <button class="fake-button" style="margin-top: 15px; width: 100%;" onclick="closeAd()">谢谢，我不要</button>
+            <button class="fake-button" style="background: #e74c3c; margin-top: 10px; width: 100%;" onclick="spawnMoreAds()">我还要看更多！</button>
+        </div>
+    </div>
+
+    <!-- 蓝屏 -->
+    <div class="bsod" id="bsod">
+        <div class="sad-face">:(</div>
+        <h1>您的电脑遇到问题，需要重新启动。</h1>
+        <div class="details">
+            <p>我们只收集一些错误信息，然后为你重新启动。</p>
+            <p style="margin-top: 20px;">完成百分比: <span id="bsodProgress">0</span>%</p>
+            <p style="margin-top: 10px; font-size: 0.7rem;">如果需要了解更多信息，你可以稍后在线搜索此错误代码：TROLLED_BY_YOU</p>
+        </div>
+    </div>
+
+    <!-- 鼠标跟随 -->
+    <div id="cursor-follower" style="display:none;">👻</div>
+
+    <!-- 跟随元素 -->
+    <div class="follow-element" id="followElement" style="display:none;">
+        你往哪跑？😏
+    </div>
+
+    <!-- 最终彩蛋 -->
+    <div id="final-message">
+        <div class="final-emoji">🎭</div>
+        <h1 class="final-title">哈哈，你被耍了！</h1>
+        <p class="final-text" id="finalText"></p>
+        <div style="margin-top: 30px; color: #555; font-size: 0.9rem;">
+            <p>这只是一个恶作剧页面</p>
+            <p style="margin-top: 5px;">没有病毒，没有奖金，只有欢笑 😄</p>
+        </div>
+        <button class="fake-button" style="margin-top: 30px;" onclick="resetPage()">🔄 再玩一次</button>
+        <p style="margin-top: 20px; color: #444; font-size: 0.8rem;">（点击按钮可能会有惊喜哦~）</p>
+    </div>
+
+    <script>
+        // 状态变量
+        let trollPhase = 0;
+        let adCount = 0;
+        let escapeBtnVisible = false;
+        let shakeCount = 0;
+        let progressInterval;
+        let ads = [];
+
+        // 音效生成
+        function playBeep(frequency = 440, duration = 100) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+                
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + duration / 1000);
+            } catch(e) {}
+        }
+
+        // 开始恶搞
+        function startTroll() {
+            playBeep(800, 200);
+            document.getElementById('entry-page').style.display = 'none';
+            document.getElementById('troll-page').style.display = 'block';
+            
+            // 假进度条
+            let progress = 0;
+            const messages = [
+                '正在连接服务器...',
+                '正在验证您的身份...',
+                '正在加载奖品信息...',
+                '正在分配奖金...',
+                '正在处理中，请稍候...',
+                '正在优化用户体验...',
+                '正在计算最佳惊喜时刻...',
+                '正在调用外星科技...',
+                '正在跟银行确认...',
+                '正在泡咖啡...',
+                '正在跟钱聊天...',
+                '正在让进度条看起来更真实...',
+                '即将完成...',
+                '快了快了...',
+                '还差一点点...',
+                '正在给进度条加油...',
+                '进度条罢工了，正在谈判...',
+                '99%了！真的！相信我！',
+                '正在刷新99%...',
+                '永远的99%...',
+            ];
+            
+            let messageIndex = 0;
+            
+            progressInterval = setInterval(() => {
+                if (progress < 99) {
+                    // 越来越慢
+                    let increment = Math.max(0.1, (100 - progress) / 50);
+                    
+                    // 偶尔倒退
+                    if (Math.random() < 0.1 && progress > 50) {
+                        increment = -Math.random() * 5;
+                    }
+                    
+                    progress = Math.min(99, progress + increment);
+                }
+                
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressPercent').textContent = Math.floor(progress) + '%';
+                
+                // 更新消息
+                if (Math.random() < 0.05) {
+                    document.getElementById('loadingMessage').textContent = messages[messageIndex % messages.length];
+                    messageIndex++;
+                }
+                
+                playBeep(200 + progress * 5, 50);
+            }, 100);
+            
+            // 10秒后显示主内容
+            setTimeout(() => {
+                clearInterval(progressInterval);
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressPercent').textContent = '100%';
+                document.getElementById('loadingMessage').textContent = '加载完成！';
+                playBeep(1000, 300);
+                
+                setTimeout(() => {
+                    document.getElementById('fake-loading').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                    showVirusAlert();
+                    startRandomTrolls();
+                }, 1000);
+            }, 10000);
+        }
+
+        // 病毒警告
+        function showVirusAlert() {
+            document.getElementById('virusAlert').style.display = 'block';
+            document.getElementById('virusCount').textContent = Math.floor(Math.random() * 1000 + 42);
+            playBeep(300, 500);
+        }
+
+        function closeVirusAlert() {
+            playBeep(600, 100);
+            document.getElementById('virusAlert').style.display = 'none';
+            
+            // 关闭后50%概率再弹一个
+            if (Math.random() < 0.5) {
+                setTimeout(() => {
+                    if (document.getElementById('troll-page').style.display !== 'none') {
+                        showVirusAlert();
+                    }
+                }, 3000);
+            }
+        }
+
+        // 逃跑按钮
+        function showEscapeBtn(e) {
+            e.preventDefault();
+            const btn = document.getElementById('escapeBtn');
+            btn.style.display = 'block';
+            escapeBtnVisible = true;
+            moveEscapeBtn();
+            playBeep(500, 200);
+        }
+
+        function moveEscapeBtn() {
+            const btn = document.getElementById('escapeBtn');
+            const maxX = window.innerWidth - btn.offsetWidth - 20;
+            const maxY = window.innerHeight - btn.offsetHeight - 20;
+            
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            
+            btn.style.left = newX + 'px';
+            btn.style.top = newY + 'px';
+        }
+
+        // 鼠标悬停逃跑按钮
+        document.addEventListener('mousemove', (e) => {
+            const btn = document.getElementById('escapeBtn');
+            if (escapeBtnVisible && btn.style.display !== 'none') {
+                const btnRect = btn.getBoundingClientRect();
+                const distance = Math.hypot(e.clientX - (btnRect.left + btnRect.width/2), e.clientY - (btnRect.top + btnRect.height/2));
+                
+                if (distance < 150) {
+                    moveEscapeBtn();
+                }
+            }
+        });
+
+        document.getElementById('escapeBtn').addEventListener('click', function() {
+            this.textContent = '😂 抓不到我~';
+            setTimeout(() => {
+                this.style.display = 'none';
+                escapeBtnVisible = false;
+            }, 1000);
+        });
+
+        // 广告弹窗
+        function showAd(e) {
+            e.preventDefault();
+            const popup = document.getElementById('adPopup');
+            
+            popup.style.display = 'block';
+            popup.style.left = (Math.random() * (window.innerWidth - 350)) + 'px';
+            popup.style.top = (Math.random() * (window.innerHeight - 300)) + 'px';
+            
+            adCount++;
+            playBeep(700, 150);
+        }
+
+        function closeAd() {
+            document.getElementById('adPopup').style.display = 'none';
+            
+            // 关闭时又弹出新的
+            if (adCount < 5 && Math.random() < 0.7) {
+                setTimeout(() => {
+                    if (document.getElementById('troll-page').style.display !== 'none') {
+                        showAd({preventDefault: () => {}});
+                    }
+                }, 1000);
+            }
+        }
+
+        function spawnMoreAds() {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => showAd({preventDefault: () => {}}), i * 300);
+            }
+            document.getElementById('adPopup').style.display = 'none';
+        }
+
+        // 蓝屏
+        function triggerBSOD() {
+            document.getElementById('bsod').style.display = 'block';
+            let bsodProgress = 0;
+            
+            const bsodInterval = setInterval(() => {
+                bsodProgress += Math.random() * 0.5;
+                document.getElementById('bsodProgress').textContent = Math.floor(bsodProgress);
+                
+                if (bsodProgress >= 100) {
+                    clearInterval(bsodInterval);
+                    setTimeout(() => {
+                        document.getElementById('bsod').style.display = 'none';
+                    }, 2000);
+                }
+            }, 500);
+            
+            playBeep(100, 2000);
+        }
+
+        // 页面抖动
+        function shakePage() {
+            document.body.classList.add('page-shake');
+            shakeCount++;
+            
+            setTimeout(() => {
+                document.body.classList.remove('page-shake');
+            }, 500);
+            
+            playBeep(150 + Math.random() * 300, 100);
+        }
+
+        // 鼠标跟随
+        function startMouseFollower() {
+            const follower = document.getElementById('cursor-follower');
+            follower.style.display = 'block';
+            
+            const emojis = ['👻', '😱', '🤪', '👀', '💀', '🤡', '👽', '🎃'];
+            let currentEmoji = 0;
+            
+            document.addEventListener('mousemove', (e) => {
+                follower.style.left = (e.clientX + 20) + 'px';
+                follower.style.top = (e.clientY + 20) + 'px';
+                
+                if (Math.random() < 0.01) {
+                    currentEmoji = (currentEmoji + 1) % emojis.length;
+                    follower.textContent = emojis[currentEmoji];
+                }
+            });
+        }
+
+        // 跟随文字
+        function startFollowElement() {
+            const el = document.getElementById('followElement');
+            el.style.display = 'block';
+            
+            const texts = [
+                '你往哪跑？😏',
+                '抓住你了！🎯',
+                '别跑啊~🏃',
+                '我就在这里~',
+                '你看到我了吗？👀',
+                '嘿嘿嘿~😈',
+            ];
+            
+            let textIndex = 0;
+            
+            document.addEventListener('mousemove', (e) => {
+                el.style.left = (e.clientX - 80) + 'px';
+                el.style.top = (e.clientY + 40) + 'px';
+                
+                if (Math.random() < 0.02) {
+                    el.textContent = texts[textIndex % texts.length];
+                    textIndex++;
+                }
+            });
+        }
+
+        // 随机恶搞
+        function startRandomTrolls() {
+            const trolls = [
+                () => shakePage(),
+                () => showVirusAlert(),
+                () => {
+                    document.body.style.transform = `rotate(${Math.random() * 4 - 2}deg)`;
+                    setTimeout(() => document.body.style.transform = '', 2000);
+                },
+                () => {
+                    document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    setTimeout(() => document.body.style.filter = '', 3000);
+                },
+                () => triggerBSOD(),
+                () => startMouseFollower(),
+                () => startFollowElement(),
+                () => showAd({preventDefault: () => {}}),
+            ];
+            
+            // 每5-15秒随机触发一个恶搞
+            function scheduleNext() {
+                const delay = 5000 + Math.random() * 10000;
+                setTimeout(() => {
+                    if (document.getElementById('troll-page').style.display !== 'none') {
+                        const troll = trolls[Math.floor(Math.random() * trolls.length)];
+                        troll();
+                        scheduleNext();
+                    }
+                }, delay);
+            }
+            
+            scheduleNext();
+        }
+
+        // 最终恶搞
+        function startFinalTroll() {
+            // 连续弹出多个确认框
+            const messages = [
+                '您确定要领取吗？',
+                '真的确定吗？',
+                '真的真的确定吗？',
+                '你不会后悔吗？',
+                '给你最后一次机会！',
+                '确定不是手滑了？',
+                '你真的很想要？',
+                '好吧，那我问你...',
+                '2 + 2 = ?',
+                '算了，再想想...',
+                '想好了吗？',
+                '确定不要反悔？',
+                '好，正在处理...',
+            ];
+            
+            let i = 0;
+            
+            function askNext() {
+                if (i < messages.length) {
+                    // 大部分用confirm，偶尔用alert
+                    if (i % 3 === 0) {
+                        alert(messages[i]);
+                    } else {
+                        confirm(messages[i]);
+                    }
+                    i++;
+                    setTimeout(askNext, 100);
+                } else {
+                    // 最终彩蛋
+                    showFinalMessage();
+                }
+            }
+            
+            askNext();
+            playBeep(800, 100);
+        }
+
+        // 最终消息
+        function showFinalMessage() {
+            document.getElementById('troll-page').style.display = 'none';
+            document.getElementById('final-message').style.display = 'flex';
+            
+            // 打字效果
+            const text = '如果你看到了这里，说明你真的很有耐心！🤣\n\n这是一个纯粹的恶作剧页面，没有任何病毒或恶意程序。\n\n希望这个小玩笑能给你带来一点欢乐~\n\n下次看到"恭喜中奖"的弹窗，记得三思而后行哦！\n\n感谢你的配合，你是最棒的观众！👏';
+            
+            let charIndex = 0;
+            const finalText = document.getElementById('finalText');
+            
+            const typeInterval = setInterval(() => {
+                if (charIndex < text.length) {
+                    finalText.textContent += text[charIndex];
+                    charIndex++;
+                } else {
+                    clearInterval(typeInterval);
+                }
+            }, 50);
+            
+            playBeep(523, 200);
+            setTimeout(() => playBeep(659, 200), 200);
+            setTimeout(() => playBeep(784, 400), 400);
+        }
+
+        // 重置页面（但其实又是一个恶搞）
+        function resetPage() {
+            document.getElementById('final-message').style.display = 'none';
+            
+            // 假装重置，其实是另一个恶搞
+            document.body.style.transition = 'transform 2s';
+            document.body.style.transform = 'rotate(360deg)';
+            
+            playBeep(200, 300);
+            
+            setTimeout(() => {
+                document.body.style.transform = '';
+                
+                // 显示一个小惊喜
+                const surprise = document.createElement('div');
+                surprise.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 40px;
+                    border-radius: 16px;
+                    text-align: center;
+                    z-index: 100000;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                    color: #333;
+                `;
+                surprise.innerHTML = `
+                    <div style="font-size: 4rem; margin-bottom: 15px;">🎉</div>
+                    <h2 style="margin-bottom: 10px;">哈哈，没想到吧！</h2>
+                    <p style="color: #666;">你以为重置就能结束？</p>
+                    <p style="color: #666; margin-top: 10px;">这才刚刚开始呢~ 😈</p>
+                    <button class="fake-button" style="margin-top: 20px;" onclick="this.parentElement.remove(); document.getElementById('entry-page').style.display='flex';">好吧，我认输了</button>
+                `;
+                document.body.appendChild(surprise);
+                
+                playBeep(666, 300);
+            }, 2000);
+        }
+
+        // 页面加载时的隐藏彩蛋
+        console.log('%c🎮 恭喜你发现了控制台！', 'color: #ffd700; font-size: 24px; font-weight: bold;');
+        console.log('%c但这里什么都没有哦~ 😏', 'color: #ff6b6b; font-size: 16px;');
+        console.log('%c(好吧，其实有一个秘密：输入 "我是笨蛋" 可以跳过所有恶搞)', 'color: #666; font-size: 12px;');
+        
+        // 控制台彩蛋
+        let konamiCode = '';
+        document.addEventListener('keydown', (e) => {
+            konamiCode += e.key;
+            if (konamiCode.includes('笨蛋') || konamiCode.includes('idiot')) {
+                document.getElementById('entry-page').style.display = 'none';
+                document.getElementById('troll-page').style.display = 'none';
+                document.getElementById('final-message').style.display = 'flex';
+                document.getElementById('finalText').textContent = '你真的以为有跳过功能吗？🤣\n\n这本身也是一个恶作剧！';
+                konamiCode = '';
+            }
+        });
+    </script>
+</body>
+</html>

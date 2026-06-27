@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Can I Say?!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            transition: background 1s ease;
+        }
+
+        body.theme-unlocked {
+            background: linear-gradient(135deg, #1a1a2e, #e94560, #16213e, #0f3460);
+            background-size: 400% 400%;
+            animation: epicGradient 5s ease infinite;
+        }
+
+        @keyframes epicGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-text {
+            font-size: clamp(2rem, 8vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease infinite;
+            text-shadow: none;
+            user-select: none;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .main-text:hover {
+            transform: scale(1.05);
+        }
+
+        .main-text.clicked {
+            animation: shake 0.5s ease-in-out, gradientShift 3s ease infinite;
+        }
+
+        .secret-theme {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .secret-theme.active {
+            display: flex;
+            animation: revealTheme 1.5s ease-out;
+        }
+
+        @keyframes revealTheme {
+            0% { opacity: 0; transform: scale(0.3) rotate(-180deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .man-text {
+            font-size: clamp(3rem, 12vw, 8rem);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.8), 0 0 40px rgba(233, 69, 96, 0.6), 0 0 80px rgba(233, 69, 96, 0.4);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(233, 69, 96, 0.8), 0 0 40px rgba(233, 69, 96, 0.6); }
+            50% { text-shadow: 0 0 30px rgba(233, 69, 96, 1), 0 0 60px rgba(233, 69, 96, 0.8), 0 0 100px rgba(233, 69, 96, 0.6); }
+        }
+
+        .real-theme-text {
+            font-size: clamp(1.5rem, 5vw, 3.5rem);
+            font-weight: 700;
+            background: linear-gradient(45deg, #feca57, #ff6b6b, #48dbfb, #ff9ff3);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 2s ease infinite;
+        }
+
+        .subtitle-secret {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .back-btn {
+            margin-top: 1.5rem;
+            padding: 12px 30px;
+            font-size: 1rem;
+            color: #fff;
+            background: linear-gradient(45deg, #e94560, #533483);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.4);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(233, 69, 96, 0.6);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .punctuation {
+            font-size: clamp(2.5rem, 10vw, 8rem);
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            margin-top: 2rem;
+            font-style: italic;
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+
+        .hint-text {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            animation: fadeInUp 1s ease 1s both;
+            transition: opacity 0.3s;
+        }
+
+        .hint-text:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-box {
+            margin-top: 2rem;
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .response-text {
+            color: #fff;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            line-height: 1.6;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s ease;
+        }
+
+        .response-text.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .btn-generate {
+            margin-top: 1.5rem;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            animation: fadeInUp 1s ease 0.8s both;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        .counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+        }
+
+        .unlock-counter {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .unlock-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .unlock-dot.active {
+            background: #e94560;
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.8);
+        }
+
+        .particle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .bg-emoji {
+            position: fixed;
+            font-size: 2rem;
+            opacity: 0.1;
+            pointer-events: none;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+
+        .emoji-burst {
+            position: fixed;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: burstUp 1s ease-out forwards;
+        }
+
+        @keyframes burstUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-200px) scale(0); }
+        }
+
+        .mega-burst {
+            position: fixed;
+            font-size: 4rem;
+            pointer-events: none;
+            animation: megaBurst 2s ease-out forwards;
+        }
+
+        @keyframes megaBurst {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); }
+            100% { opacity: 0; transform: scale(3) rotate(720deg) translateY(-300px); }
+        }
+
+        .screen-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .screen-flash.active {
+            animation: flash 0.5s ease-out;
+        }
+
+        @keyframes flash {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .response-box {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            .unlock-counter {
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-flash" id="screenFlash"></div>
+    
+    <div class="bg-emoji" style="left: 10%; top: 20%; animation-delay: 0s;">🤷</div>
+    <div class="bg-emoji" style="left: 80%; top: 30%; animation-delay: 2s;">😅</div>
+    <div class="bg-emoji" style="left: 20%; top: 70%; animation-delay: 4s;">💬</div>
+    <div class="bg-emoji" style="left: 70%; top: 80%; animation-delay: 6s;">🤔</div>
+    <div class="bg-emoji" style="left: 50%; top: 10%; animation-delay: 3s;">✨</div>
+
+    <div class="unlock-counter" id="unlockCounter">
+        <div class="unlock-dot" id="dot1"></div>
+        <div class="unlock-dot" id="dot2"></div>
+        <div class="unlock-dot" id="dot3"></div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <h1 class="main-text" id="mainText">What Can I Say<span class="punctuation">?!</span></h1>
+        <p class="subtitle" id="subtitle">Click the text or the button for some wisdom...</p>
+        <p class="hint-text" id="hintText">💡 Hint: Try clicking the title multiple times...</p>
+        
+        <div class="response-box" id="responseBox">
+            <p class="response-text" id="responseText">Go ahead, click something!</p>
+        </div>
+
+        <button class="btn-generate" id="btnGenerate" onclick="generateResponse()">
+            Tell Me More 🎭
+        </button>
+    </div>
+
+    <div class="container secret-theme" id="secretTheme">
+        <div class="man-text">MAN!</div>
+        <div class="real-theme-text">What can I say!</div>
+        <p class="subtitle-secret">🎤 The legendary phrase has been unlocked! 🎤</p>
+        <p class="subtitle-secret" style="font-size: 0.9rem; margin-top: 0.5rem;">You've discovered the true meaning...</p>
+        <button class="back-btn" onclick="goBack()">Go Back ↩</button>
+    </div>
+
+    <div class="counter">
+        Quotes generated: <span id="quoteCount">0</span>
+    </div>
+
+    <script>
+        const responses = [
+            "Sometimes silence speaks louder than words... but not today! 🤫",
+            "Life is short. Smile while you still have teeth! 😁",
+            "I'm not lazy, I'm on energy-saving mode! 🔋",
+            "Common sense is like deodorant. The people who need it most never use it! 🤦",
+            "I'm not arguing, I'm just explaining why I'm right! 😤",
+            "The best things in life are free... except for Wi-Fi! 📶",
+            "I'm on a seafood diet. I see food and I eat it! 🍕",
+            "My bed is a magical place where I suddenly remember everything I forgot to do! 🛏️",
+            "I'm not weird. I'm limited edition! ⭐",
+            "Adulting is like folding a fitted sheet. No one really knows how! 🤯",
+            "I need a six-month vacation, twice a year! ✈️",
+            "My wallet is like an onion. Opening it makes me cry! 😢",
+            "I followed my heart, and it led me to the fridge! 🧊",
+            "I'm not procrastinating. I'm doing my part in delaying the inevitable! ⏰",
+            "Life gives you lemons? Just add vodka! 🍋",
+            "I'm not short, I'm fun-sized! 🎁",
+            "The circles under my eyes are Chanel! 👁️",
+            "I don't need a hairstylist, my pillow gives me a new style every morning! 💇",
+            "I'm not late, I'm running on island time! 🏝️",
+            "My brain has too many tabs open! 🧠",
+            "Chocolate doesn't ask questions, chocolate understands! 🍫",
+            "I'm not clumsy. The floor just hates me! 💥",
+            "I put the 'Pro' in procrastinate! 🏆",
+            "Error 404: Motivation not found! 🖥️",
+            "I'm not weird, I'm a limited edition collector's item! 🦄"
+        ];
+
+        const emojis = ['🤷', '😂', '🤣', '😅', '🙄', '😏', '🫠', '🤪', '😈', '💀', '👀', '✨', '🎭', '🃏', '🎪'];
+        const megaEmojis = ['🎉', '🎊', '🏆', '⭐', '🌟', '💫', '🎆', '🎇', '🔥', '💥'];
+
+        let quoteCount = 0;
+        let lastResponseIndex = -1;
+        let secretClickCount = 0;
+        let lastClickTime = 0;
+        let secretUnlocked = false;
+
+        setTimeout(() => {
+            const responseText = document.getElementById('responseText');
+            responseText.classList.add('visible');
+        }, 1000);
+
+        function updateUnlockDots() {
+            document.getElementById('dot1').className = 'unlock-dot' + (secretClickCount >= 1 ? ' active' : '');
+            document.getElementById('dot2').className = 'unlock-dot' + (secretClickCount >= 2 ? ' active' : '');
+            document.getElementById('dot3').className = 'unlock-dot' + (secretClickCount >= 3 ? ' active' : '');
+        }
+
+        function handleSecretClick() {
+            const now = Date.now();
+            const timeDiff = now - lastClickTime;
+            lastClickTime = now;
+
+            if (timeDiff < 600) {
+                secretClickCount++;
+            } else {
+                secretClickCount = 1;
+            }
+
+            updateUnlockDots();
+
+            if (secretClickCount >= 3 && !secretUnlocked) {
+                unlockSecretTheme();
+            }
+        }
+
+        function unlockSecretTheme() {
+            secretUnlocked = true;
+            
+            const flash = document.getElementById('screenFlash');
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 500);
+
+            document.body.classList.add('theme-unlocked');
+
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createMegaBurst();
+                }, i * 100);
+            }
+
+            setTimeout(() => {
+                document.getElementById('mainContainer').style.display = 'none';
+                document.getElementById('secretTheme').classList.add('active');
+            }, 800);
+
+            setTimeout(() => {
+                document.getElementById('unlockCounter').style.display = 'none';
+            }, 1000);
+        }
+
+        function goBack() {
+            secretClickCount = 0;
+            secretUnlocked = false;
+            document.body.classList.remove('theme-unlocked');
+            document.getElementById('secretTheme').classList.remove('active');
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('unlockCounter').style.display = 'flex';
+            updateUnlockDots();
+        }
+
+        function generateResponse() {
+            const responseText = document.getElementById('responseText');
+            const mainText = document.getElementById('mainText');
+            
+            mainText.classList.remove('clicked');
+            void mainText.offsetWidth;
+            mainText.classList.add('clicked');
+
+            responseText.classList.remove('visible');
+
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * responses.length);
+            } while (newIndex === lastResponseIndex && responses.length > 1);
+            lastResponseIndex = newIndex;
+
+            setTimeout(() => {
+                responseText.textContent = responses[newIndex];
+                responseText.classList.add('visible');
+            }, 300);
+
+            quoteCount++;
+            document.getElementById('quoteCount').textContent = quoteCount;
+
+            createEmojiBurst();
+        }
+
+        function createEmojiBurst() {
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const burst = document.createElement('div');
+            burst.className = 'emoji-burst';
+            burst.textContent = emoji;
+            burst.style.left = Math.random() * 80 + 10 + '%';
+            burst.style.top = Math.random() * 40 + 50 + '%';
+            document.body.appendChild(burst);
+            
+            setTimeout(() => burst.remove(), 1000);
+        }
+
+        function createMegaBurst() {
+            const emoji = megaEmojis[Math.floor(Math.random() * megaEmojis.length)];
+            const burst = document.createElement('div');
+            burst.className = 'mega-burst';
+            burst.textContent = emoji;
+            burst.style.left = Math.random() * 80 + 10 + '%';
+            burst.style.top = Math.random() * 60 + 20 + '%';
+            document.body.appendChild(burst);
+            
+            setTimeout(() => burst.remove(), 2000);
+        }
+
+        document.getElementById('mainText').addEventListener('click', function() {
+            generateResponse();
+            handleSecretClick();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                generateResponse();
+                handleSecretClick();
+            }
+        });
+
+        function createParticles() {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particle.style.animation = `float ${5 + Math.random() * 10}s ease-in-out infinite`;
+                document.body.appendChild(particle);
+            }
+        }
+
+        createParticles();
+    </script>
+</body>
+</html>

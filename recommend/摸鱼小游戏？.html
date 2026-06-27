@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摸鱼模拟器 - 偷偷摸鱼不被老板发现！</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .game-header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-value {
+            color: #ff6b6b;
+        }
+
+        .office-scene {
+            background: linear-gradient(180deg, #f5f5dc 0%, #e8e0c8 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .office-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .window {
+            position: absolute;
+            top: 15px;
+            width: 80px;
+            height: 60px;
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 100%);
+            border: 4px solid #8B7355;
+            border-radius: 8px;
+        }
+
+        .window:nth-child(1) { left: 30px; }
+        .window:nth-child(2) { right: 30px; }
+
+        .desk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 80px;
+            background: linear-gradient(180deg, #DEB887 0%, #C4A36E 100%);
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .desk::before {
+            content: '💻';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+        }
+
+        .character {
+            font-size: 100px;
+            z-index: 10;
+            transition: all 0.3s;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+        }
+
+        .activity-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            z-index: 10;
+            margin-top: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .boss-alert {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0);
+            z-index: 50;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .boss-coming {
+            background: rgba(255, 0, 0, 0.15);
+            animation: bossShake 0.1s infinite;
+        }
+
+        @keyframes bossShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        .boss-indicator {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4444;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+        }
+
+        .boss-visible {
+            opacity: 1;
+            animation: bossPulse 0.5s infinite;
+        }
+
+        @keyframes bossPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+
+        .boss-character {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 60px;
+            z-index: 60;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+
+        .boss-appears {
+            opacity: 1;
+            animation: bossWalk 0.5s ease-in-out;
+        }
+
+        @keyframes bossWalk {
+            0% { transform: translateX(100px); }
+            100% { transform: translateX(0); }
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 18px 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-work {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-fish {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+        }
+
+        .btn-phone {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+
+        .btn-sleep {
+            background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-emoji {
+            font-size: 24px;
+        }
+
+        .start-screen {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .start-title {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .start-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .start-emoji {
+            font-size: 80px;
+            margin: 20px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .tips {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #666;
+            text-align: left;
+        }
+
+        .tips li {
+            margin: 8px 0;
+            list-style: none;
+        }
+
+        .game-over-screen {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .game-over-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff4444;
+            margin-bottom: 10px;
+        }
+
+        .game-over-emoji {
+            font-size: 100px;
+            margin: 20px 0;
+        }
+
+        .final-score {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .score-breakdown {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .combo-text {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            z-index: 1000;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            animation: comboFloat 1s ease-out forwards;
+        }
+
+        @keyframes comboFloat {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 10px;
+            }
+            
+            .game-header {
+                padding: 15px;
+                justify-content: center;
+            }
+            
+            .stat-box {
+                min-width: 80px;
+                padding: 6px 10px;
+            }
+            
+            .stat-value {
+                font-size: 18px;
+            }
+            
+            .office-scene {
+                padding: 20px;
+                min-height: 250px;
+            }
+            
+            .character {
+                font-size: 70px;
+            }
+            
+            .btn {
+                padding: 15px 10px;
+                font-size: 14px;
+            }
+            
+            .btn-emoji {
+                font-size: 20px;
+            }
+            
+            .start-title {
+                font-size: 28px;
+            }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .success-flash {
+            animation: successFlash 0.3s ease-out;
+        }
+
+        @keyframes successFlash {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            100% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
+        }
+
+        .coffee-steam {
+            position: absolute;
+            font-size: 30px;
+            animation: steamRise 2s ease-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes steamRise {
+            0% { transform: translateY(0); opacity: 0.8; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 开始界面 -->
+        <div id="startScreen" class="start-screen">
+            <div class="start-title">摸鱼模拟器</div>
+            <div class="start-subtitle">在老板眼皮底下偷偷摸鱼！</div>
+            <div class="start-emoji">🐟</div>
+            <button class="btn-start" onclick="startGame()">开始摸鱼</button>
+            <ul class="tips">
+                <li>📱 点击摸鱼按钮偷偷做其他事情</li>
+                <li>👔 老板来的时候要快速切回工作！</li>
+                <li>⚡ 连续摸鱼可以触发连击加分</li>
+                <li>⚠️ 被老板抓到3次就游戏结束！</li>
+            </ul>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="gameScreen" class="hidden">
+            <div class="game-header">
+                <div class="stat-box">
+                    <div class="stat-label">摸鱼分</div>
+                    <div class="stat-value score-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">连击</div>
+                    <div class="stat-value" id="combo">x0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">被抓次数</div>
+                    <div class="stat-value" id="caught">0/3</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="caughtBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="office-scene" id="officeScene">
+                <div class="office-bg">
+                    <div class="window"></div>
+                    <div class="window"></div>
+                    <div class="desk"></div>
+                </div>
+                <div class="boss-alert" id="bossAlert"></div>
+                <div class="boss-indicator" id="bossIndicator">👔 老板来了！快工作！</div>
+                <div class="boss-character" id="bossCharacter">👔🕵️</div>
+                <div class="character" id="character">🧑‍💼</div>
+                <div class="activity-text" id="activityText">认真工作中...</div>
+            </div>
+
+            <div class="action-buttons" id="actionButtons">
+                <button class="btn btn-work" id="btnWork" onclick="doAction('work')">
+                    <span class="btn-emoji">💻</span> 认真工作
+                </button>
+                <button class="btn btn-fish" id="btnChat" onclick="doAction('chat')">
+                    <span class="btn-emoji">💬</span> 聊天吹水
+                </button>
+                <button class="btn btn-phone" id="btnPhone" onclick="doAction('phone')">
+                    <span class="btn-emoji">📱</span> 刷手机
+                </button>
+                <button class="btn btn-sleep" id="btnSleep" onclick="doAction('sleep')">
+                    <span class="btn-emoji">😴</span> 打瞌睡
+                </button>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div id="gameOverScreen" class="game-over-screen hidden">
+            <div class="game-over-title">😱 被老板抓到了！</div>
+            <div class="game-over-emoji" id="gameOverEmoji">👔💢🧑‍💼</div>
+            <div id="rankBadge" class="rank-badge"></div>
+            <div class="score-breakdown">
+                <div class="score-item">
+                    <span>摸鱼得分：</span>
+                    <span id="finalScore">0</span>
+                </div>
+                <div class="score-item">
+                    <span>最高连击：</span>
+                    <span id="maxCombo">0</span>
+                </div>
+                <div class="score-item">
+                    <span>摸鱼次数：</span>
+                    <span id="totalFish">0</span>
+                </div>
+                <div class="score-item">
+                    <span>存活时间：</span>
+                    <span id="survivalTime">0秒</span>
+                </div>
+            </div>
+            <button class="btn-start" onclick="restartGame()">再来一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            caught: 0,
+            maxCaught: 3,
+            isWorking: true,
+            bossComing: false,
+            bossTimer: null,
+            gameActive: false,
+            startTime: 0,
+            fishCount: 0,
+            currentAction: 'work'
+        };
+
+        // 动作配置
+        const actions = {
+            work: { emoji: '🧑‍💼', text: '认真工作中...', score: 0, isFish: false },
+            chat: { emoji: '😄🗣️', text: '和同事聊天吹水中...', score: 10, isFish: true },
+            phone: { emoji: '🤳📳', text: '偷偷刷手机中...', score: 15, isFish: true },
+            sleep: { emoji: '😴💤', text: '打瞌睡中...', score: 25, isFish: true }
+        };
+
+        const catchMessages = [
+            '老板路过看到你在摸鱼！',
+            '老板悄无声息地站在了你身后！',
+            '老板从监控里看到你在偷懒！'
+        ];
+
+        const ranks = [
+            { min: 0, title: '职场小白', color: '#9E9E9E', emoji: '🐣' },
+            { min: 50, title: '摸鱼学徒', color: '#4CAF50', emoji: '🐟' },
+            { min: 150, title: '摸鱼达人', color: '#2196F3', emoji: '🐠' },
+            { min: 300, title: '摸鱼专家', color: '#9C27B0', emoji: '🐡' },
+            { min: 500, title: '摸鱼大师', color: '#FF9800', emoji: '🦈' },
+            { min: 1000, title: '摸鱼之王', color: '#F44336', emoji: '👑🐟' }
+        ];
+
+        // DOM 元素
+        const elements = {
+            startScreen: document.getElementById('startScreen'),
+            gameScreen: document.getElementById('gameScreen'),
+            gameOverScreen: document.getElementById('gameOverScreen'),
+            score: document.getElementById('score'),
+            combo: document.getElementById('combo'),
+            caught: document.getElementById('caught'),
+            caughtBar: document.getElementById('caughtBar'),
+            character: document.getElementById('character'),
+            activityText: document.getElementById('activityText'),
+            officeScene: document.getElementById('officeScene'),
+            bossAlert: document.getElementById('bossAlert'),
+            bossIndicator: document.getElementById('bossIndicator'),
+            bossCharacter: document.getElementById('bossCharacter'),
+            actionButtons: document.getElementById('actionButtons')
+        };
+
+        // 音效（使用 Web Audio API 生成简单音效）
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        // 开始游戏
+        function startGame() {
+            elements.startScreen.classList.add('hidden');
+            elements.gameScreen.classList.remove('hidden');
+            elements.gameOverScreen.classList.add('hidden');
+            
+            // 重置游戏状态
+            gameState = {
+                score: 0,
+                combo: 0,
+                maxCombo: 0,
+                caught: 0,
+                maxCaught: 3,
+                isWorking: true,
+                bossComing: false,
+                bossTimer: null,
+                gameActive: true,
+                startTime: Date.now(),
+                fishCount: 0,
+                currentAction: 'work'
+            };
+            
+            updateUI();
+            scheduleNextBoss();
+            
+            playSound(523, 0.2);
+            setTimeout(() => playSound(659, 0.2), 100);
+            setTimeout(() => playSound(784, 0.3), 200);
+        }
+
+        // 重新开始
+        function restartGame() {
+            elements.gameOverScreen.classList.add('hidden');
+            elements.startScreen.classList.remove('hidden');
+        }
+
+        // 执行动作
+        function doAction(action) {
+            if (!gameState.gameActive) return;
+            
+            const actionConfig = actions[action];
+            
+            if (actionConfig.isFish) {
+                // 摸鱼动作
+                if (gameState.bossComing) {
+                    // 被老板抓到！
+                    getCaught(action);
+                    return;
+                }
+                
+                gameState.score += actionConfig.score;
+                gameState.combo++;
+                gameState.fishCount++;
+                gameState.currentAction = action;
+                
+                if (gameState.combo > gameState.maxCombo) {
+                    gameState.maxCombo = gameState.combo;
+                }
+                
+                // 连击奖励
+                if (gameState.combo >= 3) {
+                    const comboBonus = Math.floor(gameState.combo / 3) * 5;
+                    gameState.score += comboBonus;
+                    showComboEffect(gameState.combo);
+                }
+                
+                playSound(880, 0.1);
+                
+            } else {
+                // 工作动作
+                gameState.combo = 0;
+                gameState.currentAction = 'work';
+                
+                if (gameState.bossComing) {
+                    // 安全！老板没抓到
+                    gameState.bossComing = false;
+                    hideBoss();
+                    playSound(1047, 0.3);
+                    showSuccessEffect();
+                    scheduleNextBoss();
+                }
+            }
+            
+            // 更新显示
+            elements.character.textContent = actionConfig.emoji;
+            elements.activityText.textContent = actionConfig.text;
+            
+            updateUI();
+            
+            // 添加按钮反馈
+            const btnId = 'btn' + action.charAt(0).toUpperCase() + action.slice(1);
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 300);
+            }
+        }
+
+        // 被老板抓到
+        function getCaught(action) {
+            gameState.caught++;
+            gameState.combo = 0;
+            gameState.gameActive = false;
+            
+            playSound(200, 0.5, 'sawtooth');
+            
+            elements.officeScene.classList.add('shake');
+            elements.character.textContent = '😰';
+            elements.activityText.textContent = catchMessages[gameState.caught - 1] || '被老板发现了！';
+            
+            updateUI();
+            
+            if (gameState.caught >= gameState.maxCaught) {
+                // 游戏结束
+                setTimeout(gameOver, 1500);
+            } else {
+                // 还可以继续
+                setTimeout(() => {
+                    elements.officeScene.classList.remove('shake');
+                    gameState.gameActive = true;
+                    gameState.bossComing = false;
+                    hideBoss();
+                    elements.character.textContent = actions.work.emoji;
+                    elements.activityText.textContent = '赶紧工作吧...';
+                    scheduleNextBoss();
+                }, 2000);
+            }
+        }
+
+        // 老板来了
+        function showBoss() {
+            gameState.bossComing = true;
+            
+            elements.bossAlert.classList.add('boss-coming');
+            elements.bossIndicator.classList.add('boss-visible');
+            elements.bossCharacter.classList.add('boss-appears');
+            
+            playSound(440, 0.1, 'square');
+            setTimeout(() => playSound(440, 0.1, 'square'), 150);
+            
+            // 给玩家反应时间后检查
+            gameState.bossTimer = setTimeout(() => {
+                if (gameState.bossComing && gameState.currentAction !== 'work') {
+                    getCaught(gameState.currentAction);
+                } else {
+                    // 老板走了，安全
+                    hideBoss();
+                    gameState.bossComing = false;
+                    
+                    if (gameState.gameActive) {
+                        scheduleNextBoss();
+                    }
+                }
+            }, 2000);
+        }
+
+        // 隐藏老板
+        function hideBoss() {
+            elements.bossAlert.classList.remove('boss-coming');
+            elements.bossIndicator.classList.remove('boss-visible');
+            elements.bossCharacter.classList.remove('boss-appears');
+        }
+
+        // 安排下一次老板巡视
+        function scheduleNextBoss() {
+            if (!gameState.gameActive) return;
+            
+            const minDelay = Math.max(2000, 5000 - gameState.score * 10);
+            const maxDelay = Math.max(4000, 8000 - gameState.score * 10);
+            const delay = minDelay + Math.random() * (maxDelay - minDelay);
+            
+            gameState.bossTimer = setTimeout(showBoss, delay);
+        }
+
+        // 更新UI
+        function updateUI() {
+            elements.score.textContent = gameState.score;
+            elements.combo.textContent = 'x' + gameState.combo;
+            elements.caught.textContent = gameState.caught + '/' + gameState.maxCaught;
+            elements.caughtBar.style.width = (gameState.caught / gameState.maxCaught * 100) + '%';
+            
+            // 连击颜色
+            if (gameState.combo >= 10) {
+                elements.combo.style.color = '#F44336';
+            } else if (gameState.combo >= 5) {
+                elements.combo.style.color = '#FF9800';
+            } else if (gameState.combo >= 3) {
+                elements.combo.style.color = '#4CAF50';
+            } else {
+                elements.combo.style.color = '#333';
+            }
+        }
+
+        // 显示连击效果
+        function showComboEffect(combo) {
+            const comboEl = document.createElement('div');
+            comboEl.className = 'combo-text';
+            comboEl.textContent = `${combo}连击！+${Math.floor(combo / 3) * 5}`;
+            comboEl.style.left = '50%';
+            comboEl.style.top = '40%';
+            comboEl.style.transform = 'translateX(-50%)';
+            document.body.appendChild(comboEl);
+            
+            setTimeout(() => comboEl.remove(), 1000);
+        }
+
+        // 显示成功效果
+        function showSuccessEffect() {
+            elements.officeScene.classList.add('success-flash');
+            setTimeout(() => elements.officeScene.classList.remove('success-flash'), 300);
+            
+            const successEl = document.createElement('div');
+            successEl.className = 'combo-text';
+            successEl.textContent = '安全！老板没发现！';
+            successEl.style.color = '#4CAF50';
+            successEl.style.left = '50%';
+            successEl.style.top = '40%';
+            successEl.style.transform = 'translateX(-50%)';
+            document.body.appendChild(successEl);
+            
+            setTimeout(() => successEl.remove(), 1000);
+        }
+
+        // 游戏结束
+        function gameOver() {
+            gameState.gameActive = false;
+            clearTimeout(gameState.bossTimer);
+            
+            elements.gameScreen.classList.add('hidden');
+            elements.gameOverScreen.classList.remove('hidden');
+            
+            const survivalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+            
+            // 获取段位
+            let currentRank = ranks[0];
+            for (let i = ranks.length - 1; i >= 0; i--) {
+                if (gameState.score >= ranks[i].min) {
+                    currentRank = ranks[i];
+                    break;
+                }
+            }
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('maxCombo').textContent = 'x' + gameState.maxCombo;
+            document.getElementById('totalFish').textContent = gameState.fishCount + '次';
+            document.getElementById('survivalTime').textContent = survivalTime + '秒';
+            
+            const rankBadge = document.getElementById('rankBadge');
+            rankBadge.textContent = currentRank.emoji + ' ' + currentRank.title;
+            rankBadge.style.background = currentRank.color;
+            rankBadge.style.color = 'white';
+            
+            playSound(392, 0.2, 'sawtooth');
+            setTimeout(() => playSound(330, 0.2, 'sawtooth'), 200);
+            setTimeout(() => playSound(262, 0.4, 'sawtooth'), 400);
+        }
+
+        // 初始化音频上下文（需要用户交互才能开始）
+        document.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>

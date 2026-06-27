@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深渊书库 - 遗忘知识的殿堂</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Ma+Shan+Zheng&family=Long+Cang&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-green: #0a1a0a;
+            --toxic-green: #1a4a2a;
+            --glow-green: #00ff41;
+            --dark-purple: #1a0a2e;
+            --blood-red: #8b0000;
+            --bright-red: #ff0000;
+            --abyss-black: #050505;
+            --elder-gold: #c9a84c;
+            --decay-brown: #3a2a1a;
+            --mist-white: #d4d4d4;
+            --tentacle-green: #2a5a3a;
+            --vein-purple: #4a0a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'EB Garamond', 'Long Cang', serif;
+            background: var(--abyss-black);
+            color: var(--mist-white);
+            overflow-x: hidden;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='%2300ff41' stroke-width='1'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%2300ff41'/%3E%3C/svg%3E") 10 10, auto;
+        }
+
+        /* 疯狂值指示器 */
+        #sanity-meter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid var(--toxic-green);
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        #sanity-meter.danger {
+            border-color: var(--blood-red);
+            animation: meterShake 0.1s infinite;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+        }
+
+        @keyframes meterShake {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(2px, -1px); }
+            75% { transform: translate(-1px, -2px); }
+        }
+
+        #sanity-meter::before {
+            content: '👁 SANITY';
+            display: block;
+            margin-bottom: 8px;
+            color: var(--glow-green);
+            text-shadow: 0 0 10px var(--glow-green);
+            transition: color 0.3s ease;
+        }
+
+        #sanity-meter.danger::before {
+            color: var(--bright-red);
+            text-shadow: 0 0 10px var(--bright-red);
+            animation: dangerFlash 0.5s infinite;
+        }
+
+        @keyframes dangerFlash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .sanity-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(139, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .sanity-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--glow-green), var(--elder-gold));
+            border-radius: 4px;
+            transition: width 0.5s ease, background 0.5s ease;
+        }
+
+        .sanity-value {
+            text-align: center;
+            font-size: 14px;
+            color: var(--glow-green);
+            text-shadow: 0 0 5px var(--glow-green);
+            transition: all 0.3s ease;
+        }
+
+        /* 背景效果 */
+        .bg-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,255,65,0.02) 100%);
+            animation: fogMove 30s ease-in-out infinite;
+        }
+
+        @keyframes fogMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(2%, 1%) rotate(1deg); }
+            50% { transform: translate(-1%, 2%) rotate(-1deg); }
+            75% { transform: translate(-2%, -1%) rotate(0.5deg); }
+        }
+
+        /* 粒子容器 */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--glow-green);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 8s infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { opacity: 0; transform: translateY(100vh) scale(0); }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.3; }
+            100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+        }
+
+        /* 导航 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(5,5,5,0.98) 0%, rgba(5,5,5,0.9) 70%, transparent 100%);
+            padding: 15px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cinzel Decorative', 'Ma Shan Zheng', cursive;
+            font-size: 1.8rem;
+            color: var(--glow-green);
+            text-shadow: 0 0 20px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.3);
+            text-decoration: none;
+            position: relative;
+            animation: logoPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.3); }
+            50% { text-shadow: 0 0 30px rgba(0,255,65,0.8), 0 0 60px rgba(0,255,65,0.5), 0 0 80px rgba(0,255,65,0.3); }
+        }
+
+        .logo-symbol {
+            display: inline-block;
+            animation: symbolSpin 20s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes symbolSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--mist-white);
+            text-decoration: none;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--glow-green);
+            box-shadow: 0 0 10px var(--glow-green);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--glow-green);
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero 区域 */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, rgba(26,74,42,0.2) 0%, var(--abyss-black) 70%);
+        }
+
+        .great-eye {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 50px;
+            animation: eyeBreath 4s ease-in-out infinite;
+        }
+
+        @keyframes eyeBreath {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .eye-outer {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% 0;
+            background: radial-gradient(circle, var(--toxic-green) 0%, var(--deep-green) 50%, var(--abyss-black) 100%);
+            border: 3px solid var(--glow-green);
+            box-shadow: 0 0 50px rgba(0,255,65,0.3), inset 0 0 50px rgba(0,255,65,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: eyeRotate 60s linear infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes eyeRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .eye-inner {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #000 0%, var(--toxic-green) 50%, var(--glow-green) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: eyeRotate 60s linear infinite reverse;
+            box-shadow: 0 0 30px rgba(0,255,65,0.5);
+        }
+
+        .pupil {
+            width: 60px;
+            height: 100px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,255,65,0.8), inset 0 0 10px rgba(0,255,65,0.5);
+            transition: transform 0.1s ease;
+            position: relative;
+        }
+
+        .pupil::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            top: 15px;
+            left: 10px;
+        }
+
+        /* 触手装饰 */
+        .tentacles {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .tentacle {
+            position: absolute;
+            bottom: -100px;
+            width: 30px;
+            background: linear-gradient(to top, var(--deep-green), transparent);
+            border-radius: 50% 50% 0 0;
+            transform-origin: bottom center;
+            animation: tentacleWave 5s ease-in-out infinite;
+        }
+
+        .tentacle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background: var(--toxic-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-green);
+        }
+
+        @keyframes tentacleWave {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .hero-title {
+            font-family: 'Cinzel Decorative', 'Ma Shan Zheng', cursive;
+            font-size: 4rem;
+            color: var(--glow-green);
+            text-shadow: 0 0 40px rgba(0,255,65,0.5), 0 0 80px rgba(0,255,65,0.3);
+            text-align: center;
+            animation: titleGlitch 10s infinite;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes titleGlitch {
+            0%, 95%, 100% { transform: translate(0); opacity: 1; }
+            96% { transform: translate(-2px, 1px); opacity: 0.8; }
+            97% { transform: translate(2px, -1px); opacity: 0.9; }
+            98% { transform: translate(-1px, 2px); opacity: 0.85; }
+        }
+
+        .hero-subtitle {
+            font-family: 'Long Cang', 'Ma Shan Zheng', cursive;
+            font-size: 1.5rem;
+            color: var(--mist-white);
+            opacity: 0.7;
+            margin-top: 20px;
+            letter-spacing: 5px;
+            z-index: 10;
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollBounce 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes scrollBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.5; }
+            50% { transform: translateX(-50%) translateY(10px); opacity: 1; }
+        }
+
+        .scroll-hint svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--glow-green);
+            filter: drop-shadow(0 0 5px var(--glow-green));
+        }
+
+        /* 章节内容区 */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', 'Ma Shan Zheng', serif;
+            font-size: 2.5rem;
+            color: var(--elder-gold);
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            text-shadow: 0 0 20px rgba(201,168,76,0.3);
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '⟁';
+            margin: 0 20px;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        /* 小说卡片 */
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .story-card {
+            background: linear-gradient(145deg, rgba(26,26,46,0.8) 0%, rgba(10,26,10,0.8) 100%);
+            border: 1px solid rgba(0,255,65,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, transparent 50%, rgba(201,168,76,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .story-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0,255,65,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,255,65,0.1);
+        }
+
+        .story-card:hover::before {
+            opacity: 1;
+        }
+
+        .story-cover {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-cover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(5,5,5,1) 0%, transparent 60%);
+        }
+
+        .story-cover .sigil {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            opacity: 0.3;
+            animation: sigilPulse 3s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes sigilPulse {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .story-content {
+            padding: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .story-title {
+            font-family: 'Cinzel', 'Ma Shan Zheng', serif;
+            font-size: 1.4rem;
+            color: var(--elder-gold);
+            margin-bottom: 10px;
+            transition: text-shadow 0.3s ease;
+        }
+
+        .story-card:hover .story-title {
+            text-shadow: 0 0 15px rgba(201,168,76,0.5);
+        }
+
+        .story-meta {
+            font-size: 0.85rem;
+            color: rgba(212,212,212,0.5);
+            margin-bottom: 15px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .story-excerpt {
+            color: rgba(212,212,212,0.7);
+            line-height: 1.8;
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .story-tags {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            background: rgba(0,255,65,0.1);
+            border: 1px solid rgba(0,255,65,0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--glow-green);
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+        /* 阅读面板 */
+        .reading-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            background: linear-gradient(180deg, #0a0a0a 0%, #0d1a0d 50%, #0a0a0a 100%);
+            z-index: 2000;
+            transition: right 0.5s ease;
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+            border-left: 1px solid rgba(0,255,65,0.1);
+        }
+
+        .reading-panel.active {
+            right: 0;
+        }
+
+        .reading-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .reading-panel-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .reading-header {
+            padding: 40px 40px 20px;
+            border-bottom: 1px solid rgba(0,255,65,0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .close-reading {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: none;
+            border: 1px solid rgba(0,255,65,0.3);
+            border-radius: 50%;
+            color: var(--glow-green);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-reading:hover {
+            background: rgba(0,255,65,0.1);
+            box-shadow: 0 0 15px rgba(0,255,65,0.3);
+        }
+
+        .reading-title {
+            font-family: 'Cinzel Decorative', 'Ma Shan Zheng', cursive;
+            font-size: 2rem;
+            color: var(--elder-gold);
+            margin-bottom: 10px;
+            padding-right: 50px;
+        }
+
+        .reading-meta {
+            color: rgba(212,212,212,0.5);
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+        }
+
+        .reading-body {
+            padding: 40px;
+            line-height: 2;
+            font-size: 1.1rem;
+            color: rgba(212,212,212,0.85);
+        }
+
+        .reading-body p {
+            margin-bottom: 1.5em;
+            text-indent: 2em;
+        }
+
+        .reading-body p:first-child::first-letter {
+            font-size: 4em;
+            float: left;
+            line-height: 0.8;
+            margin: 0.1em 0.1em 0 0;
+            color: var(--elder-gold);
+            font-family: 'Cinzel Decorative', serif;
+            text-shadow: 0 0 20px rgba(201,168,76,0.5);
+        }
+
+        /* 古神留言 */
+        .whisper {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            border: 1px solid rgba(0,255,65,0.3);
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-family: 'Ma Shan Zheng', cursive;
+            color: var(--glow-green);
+            font-size: 1.2rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-shadow: 0 0 10px var(--glow-green);
+            pointer-events: none;
+        }
+
+        .whisper.visible {
+            opacity: 1;
+        }
+
+        /* 符文装饰 */
+        .rune-decoration {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            font-size: 2rem;
+            color: var(--glow-green);
+            opacity: 0;
+            text-shadow: 0 0 10px var(--glow-green);
+            animation: runeFloat 2s ease-out forwards;
+        }
+
+        @keyframes runeFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(0.5); }
+        }
+
+        /* 页面扭曲效果 */
+        .page-distortion {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.1) 0px,
+                transparent 2px,
+                transparent 4px
+            );
+        }
+
+        .page-distortion.active {
+            opacity: 1;
+            animation: distortionFlash 0.2s;
+        }
+
+        @keyframes distortionFlash {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 疯狂效果 */
+        body.madness {
+            animation: madnessShake 0.15s infinite;
+        }
+
+        @keyframes madnessShake {
+            0%, 100% { transform: translate(0) rotate(0); }
+            25% { transform: translate(-2px, 1px) rotate(0.5deg); }
+            50% { transform: translate(2px, -1px) rotate(-0.5deg); }
+            75% { transform: translate(-1px, -2px) rotate(0.5deg); }
+        }
+
+        /* ==================== 恐怖眼睛效果 ==================== */
+        .madness-eye-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            background: radial-gradient(ellipse at center, rgba(10, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.99) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            overflow: hidden;
+        }
+
+        .madness-eye-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* 单个眼睛容器 */
+        .mad-eye {
+            position: absolute;
+            width: var(--eye-size, 120px);
+            height: var(--eye-size, 120px);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.5));
+        }
+
+        .madness-eye-overlay.active .mad-eye {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* 眼球外层 */
+        .mad-eye-outer {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% / 40%;
+            background: radial-gradient(ellipse, 
+                #1a0000 0%, 
+                #3a0a0a 30%, 
+                #2a0000 60%, 
+                #1a0000 100%
+            );
+            border: 3px solid var(--blood-red);
+            box-shadow: 
+                0 0 30px rgba(139, 0, 0, 0.8),
+                0 0 60px rgba(139, 0, 0, 0.4),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            animation: eyeTwitch var(--twitch-speed, 2s) infinite;
+        }
+
+        @keyframes eyeTwitch {
+            0%, 90%, 100% { transform: rotate(var(--eye-rotate, 0deg)); }
+            92% { transform: rotate(calc(var(--eye-rotate, 0deg) + 5deg)); }
+            94% { transform: rotate(calc(var(--eye-rotate, 0deg) - 3deg)); }
+            96% { transform: rotate(calc(var(--eye-rotate, 0deg) + 2deg)); }
+        }
+
+        /* 血丝 */
+        .mad-eye-outer::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 40%, rgba(139, 0, 0, 0.3) 45%, transparent 50%),
+                linear-gradient(-45deg, transparent 40%, rgba(139, 0, 0, 0.3) 45%, transparent 50%),
+                linear-gradient(90deg, transparent 45%, rgba(139, 0, 0, 0.2) 50%, transparent 55%);
+            animation: veinPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes veinPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* 虹膜 */
+        .mad-eye-iris {
+            width: 65%;
+            height: 65%;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                #000 0%, 
+                #000 35%,
+                var(--iris-color, #4a0a0a) 36%,
+                var(--iris-color, #4a0a0a) 60%,
+                #1a0000 100%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 
+                0 0 20px rgba(0, 0, 0, 0.8),
+                inset 0 0 15px rgba(0, 0, 0, 0.5);
+            animation: irisLook 4s ease-in-out infinite;
+        }
+
+        @keyframes irisLook {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(3px, -2px); }
+            50% { transform: translate(-2px, 3px); }
+            75% { transform: translate(4px, 1px); }
+        }
+
+        /* 瞳孔 */
+        .mad-eye-pupil {
+            width: 45%;
+            height: 60%;
+            background: #000;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            animation: pupilPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pupilPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.85); }
+        }
+
+        /* 瞳孔裂缝效果 */
+        .mad-eye-pupil::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                rgba(139, 0, 0, 0.8) 30%,
+                rgba(139, 0, 0, 0.8) 70%, 
+                transparent 100%
+            );
+            transform: translateX(-50%) rotate(var(--crack-angle, 0deg));
+        }
+
+        /* 眼睛高光 */
+        .mad-eye-pupil::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 眼球蠕动的血管 */
+        .mad-vein {
+            position: absolute;
+            width: 2px;
+            height: 40%;
+            background: linear-gradient(to bottom, transparent, var(--blood-red), transparent);
+            top: 0;
+            transform-origin: bottom center;
+            animation: veinWave var(--vein-speed, 3s) ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes veinWave {
+            0%, 100% { transform: rotate(var(--vein-start, -10deg)); }
+            50% { transform: rotate(var(--vein-end, 10deg)); }
+        }
+
+        /* 主标题 - 凝视深渊 */
+        .madness-title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Ma Shan Zheng', 'Cinzel Decorative', cursive;
+            font-size: 5rem;
+            color: var(--bright-red);
+            text-shadow: 
+                0 0 20px rgba(255, 0, 0, 0.8),
+                0 0 40px rgba(255, 0, 0, 0.5),
+                0 0 80px rgba(255, 0, 0, 0.3);
+            animation: madnessTitlePulse 2s ease-in-out infinite;
+            text-align: center;
+            line-height: 1.3;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease 0.5s;
+        }
+
+        .madness-eye-overlay.active .madness-title {
+            opacity: 1;
+        }
+
+        @keyframes madnessTitlePulse {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 20px rgba(255, 0, 0, 0.8),
+                    0 0 40px rgba(255, 0, 0, 0.5),
+                    0 0 80px rgba(255, 0, 0, 0.3);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 30px rgba(255, 0, 0, 1),
+                    0 0 60px rgba(255, 0, 0, 0.7),
+                    0 0 120px rgba(255, 0, 0, 0.5);
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+
+        /* 疯狂文字效果 */
+        .madness-whisper {
+            position: absolute;
+            font-family: 'Ma Shan Zheng', cursive;
+            color: rgba(255, 0, 0, 0.6);
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: whisperDrift var(--drift-duration, 5s) ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        @keyframes whisperDrift {
+            0%, 100% { 
+                opacity: 0;
+                transform: translate(0, 0) rotate(0deg);
+            }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            50% { 
+                transform: translate(var(--drift-x, 20px), var(--drift-y, -20px)) rotate(var(--drift-rotate, 5deg));
+            }
+        }
+
+        /* 重置按钮 */
+        .madness-reset-btn {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: transparent;
+            border: 2px solid var(--blood-red);
+            color: var(--blood-red);
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            padding: 15px 40px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .madness-eye-overlay.active .madness-reset-btn {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+            transition-delay: 1.5s;
+        }
+
+        .madness-reset-btn:hover {
+            background: rgba(139, 0, 0, 0.3);
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* 警告文字 */
+        .madness-warning {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', serif;
+            color: rgba(255, 0, 0, 0.5);
+            font-size: 0.9rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .madness-eye-overlay.active .madness-warning {
+            opacity: 1;
+            transition-delay: 2s;
+            animation: warningBlink 3s ease-in-out infinite 2s;
+        }
+
+        @keyframes warningBlink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.2; }
+        }
+
+        /* 扫描线效果 */
+        .scanlines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            animation: scanlineMove 10s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* 眼睛脉冲环 */
+        .eye-pulse-ring {
+            position: absolute;
+            width: var(--ring-size, 200px);
+            height: var(--ring-size, 200px);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: pulseRing 3s ease-out infinite;
+            animation-delay: var(--ring-delay, 0s);
+        }
+
+        @keyframes pulseRing {
+            0% { 
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 50px 20px;
+            border-top: 1px solid rgba(0,255,65,0.1);
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            color: rgba(212,212,212,0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        footer a {
+            color: var(--glow-green);
+            text-decoration: none;
+        }
+
+        .footer-sigil {
+            display: block;
+            margin: 20px auto;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: sigilPulse 3s ease-in-out infinite;
+        }
+
+        /* 隐藏滚动条 */
+        .reading-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .reading-panel::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .reading-panel::-webkit-scrollbar-thumb {
+            background: rgba(0,255,65,0.3);
+            border-radius: 3px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .great-eye {
+                width: 200px;
+                height: 200px;
+            }
+
+            .eye-inner {
+                width: 120px;
+                height: 120px;
+            }
+
+            .pupil {
+                width: 40px;
+                height: 70px;
+            }
+
+            .stories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .reading-header {
+                padding: 30px 20px 15px;
+            }
+
+            .reading-body {
+                padding: 20px;
+            }
+
+            .reading-title {
+                font-size: 1.5rem;
+            }
+
+            #sanity-meter {
+                top: 10px;
+                right: 10px;
+                padding: 10px;
+                min-width: 120px;
+            }
+
+            .madness-title {
+                font-size: 3rem;
+            }
+
+            .mad-eye {
+                width: 80px !important;
+                height: 80px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景雾气 -->
+    <div class="bg-effect">
+        <div class="fog"></div>
+    </div>
+
+    <!-- 粒子容器 -->
+    <div id="particles"></div>
+
+    <!-- 疯狂值指示器 -->
+    <div id="sanity-meter">
+        <div class="sanity-bar-container">
+            <div class="sanity-bar" id="sanity-bar"></div>
+        </div>
+        <div class="sanity-value"><span id="sanity-value">100</span>/100</div>
+    </div>
+
+    <!-- 导航 -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-symbol">◎</span>深渊书库
+            </a>
+            <ul class="nav-links">
+                <li><a href="#stories">藏书</a></li>
+                <li><a href="#library">禁书区</a></li>
+                <li><a href="#about">启示</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="great-eye" id="great-eye">
+            <div class="eye-outer">
+                <div class="eye-inner">
+                    <div class="pupil" id="pupil"></div>
+                </div>
+            </div>
+        </div>
+        <h1 class="hero-title">深渊书库</h1>
+        <p class="hero-subtitle">于永恒之夜，唤醒沉睡的恐惧</p>
+        <div class="scroll-hint">
+            <svg viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5z"/>
+            </svg>
+        </div>
+        <div class="tentacles">
+            <div class="tentacle" style="left: 10%; height: 200px; animation-delay: 0s;"></div>
+            <div class="tentacle" style="left: 25%; height: 280px; animation-delay: 1s;"></div>
+            <div class="tentacle" style="left: 45%; height: 220px; animation-delay: 2s;"></div>
+            <div class="tentacle" style="left: 65%; height: 260px; animation-delay: 0.5s;"></div>
+            <div class="tentacle" style="left: 80%; height: 240px; animation-delay: 1.5s;"></div>
+            <div class="tentacle" style="left: 92%; height: 200px; animation-delay: 2.5s;"></div>
+        </div>
+    </section>
+
+    <!-- 故事区域 -->
+    <section class="section" id="stories">
+        <h2 class="section-title">禁忌藏书</h2>
+        <div class="stories-grid">
+            <div class="story-card" onclick="openStory(0)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #0a1a0a 0%, #1a0a2e 100%);">
+                    <span class="sigil">☿</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">克苏鲁的呼唤</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1928</div>
+                    <p class="story-excerpt">在拉莱耶的宅邸中，沉睡的克苏鲁静静等待，当星辰归位之时，它将从深海中苏醒，带来永恒的疯狂...</p>
+                    <div class="story-tags">
+                        <span class="tag">克苏鲁</span>
+                        <span class="tag">深海</span>
+                        <span class="tag">疯狂</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-card" onclick="openStory(1)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #1a0a2e 0%, #0a1a0a 100%);">
+                    <span class="sigil">♄</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">墙中之鼠</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1924</div>
+                    <p class="story-excerpt">那栋古老的宅邸有着不可告人的秘密，墙壁中传来的抓挠声日以继夜，而那些声音，正变得越来越近...</p>
+                    <div class="story-tags">
+                        <span class="tag">恐怖</span>
+                        <span class="tag">古宅</span>
+                        <span class="tag">鼠群</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-card" onclick="openStory(2)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #2a0a0a 0%, #0a1a0a 100%);">
+                    <span class="sigil">♃</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">疯狂山脉</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1931</div>
+                    <p class="story-excerpt">在南极洲那片永恒冰封的山脉之下，沉睡着超越人类理解的古老存在，它们是地球最初的主人...</p>
+                    <div class="story-tags">
+                        <span class="tag">南极</span>
+                        <span class="tag">远古</span>
+                        <span class="tag">探险</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-card" onclick="openStory(3)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #0a0a2e 0%, #1a0a2e 100%);">
+                    <span class="sigil">☽</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">印斯茅斯之影</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1931</div>
+                    <p class="story-excerpt">那个被诅咒的海港小镇，居民们有着鱼类般的面容，他们在月圆之夜聚集在海边，向深海的神明献祭...</p>
+                    <div class="story-tags">
+                        <span class="tag">深潜者</span>
+                        <span class="tag">海港</span>
+                        <span class="tag">诅咒</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-card" onclick="openStory(4)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #1a2a0a 0%, #0a1a0a 100%);">
+                    <span class="sigil">♆</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">达贡</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1917</div>
+                    <p class="story-excerpt">一战期间，我在太平洋上漂流，误入了一片不该存在的陆地，那里有着巨大的石碑和可怕的仪式...</p>
+                    <div class="story-tags">
+                        <span class="tag">达贡</span>
+                        <span class="tag">海洋</span>
+                        <span class="tag">石碑</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-card" onclick="openStory(5)">
+                <div class="story-cover" style="background: linear-gradient(135deg, #0a1a2e 0%, #0a0a2e 100%);">
+                    <span class="sigil">☉</span>
+                </div>
+                <div class="story-content">
+                    <h3 class="story-title">星之彩</h3>
+                    <div class="story-meta">H.P. Lovecraft · 1927</div>
+                    <p class="story-excerpt">一颗陨石坠落在农场，随之而来的是一种不属于这个世界的颜色，它在吞噬一切生命，创造着不可能的变异...</p>
+                    <div class="story-tags">
+                        <span class="tag">外星</span>
+                        <span class="tag">色彩</span>
+                        <span class="tag">异变</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 禁书区 -->
+    <section id="library">
+        <div class="section" style="padding-top: 60px; padding-bottom: 60px; background: linear-gradient(180deg, transparent 0%, rgba(26,26,46,0.3) 50%, transparent 100%);">
+            <h2 class="section-title">禁书区</h2>
+            <div style="text-align: center; margin-bottom: 40px;">
+                <p style="color: rgba(212,212,212,0.5); font-style: italic; font-size: 1.1rem;">
+                    "那本书不应被阅读，那知识不应被知晓，那名字不应被说出。"<br>
+                    <span style="font-size: 0.9rem;">——《死灵之书》抄本残页</span>
+                </p>
+            </div>
+            <div class="stories-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="story-card" style="background: linear-gradient(145deg, rgba(74,10,10,0.4) 0%, rgba(10,26,10,0.4) 100%); border-color: rgba(255,0,0,0.1);" onclick="showWhisper('Necronomicon... 不要念出那个名字...')">
+                    <div class="story-content" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📕</div>
+                        <h3 class="story-title" style="color: #aa0000;">死灵之书</h3>
+                        <div class="story-meta">阿卜杜尔·阿尔哈扎德 · 公元730年</div>
+                        <p class="story-excerpt" style="margin-top: 15px;">那不是死的永眠，连奇异的死亡本身也可能消逝...</p>
+                    </div>
+                </div>
+
+                <div class="story-card" style="background: linear-gradient(145deg, rgba(26,10,46,0.4) 0%, rgba(10,26,10,0.4) 100%); border-color: rgba(128,0,255,0.1);" onclick="showWhisper('你听到那来自深渊的低语了吗？')">
+                    <div class="story-content" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📜</div>
+                        <h3 class="story-title" style="color: #8a00ff;">黄衣之王</h3>
+                        <div class="story-meta">安布罗斯·比尔斯 · 1895年</div>
+                        <p class="story-excerpt" style="margin-top: 15px;">沿着湖畔的小径，走向被诅咒的哈利湖，那里有双星闪耀...</p>
+                    </div>
+                </div>
+
+                <div class="story-card" style="background: linear-gradient(145deg, rgba(10,26,46,0.4) 0%, rgba(10,10,26,0.4) 100%); border-color: rgba(0,128,255,0.1);" onclick="showWhisper('星辰的位置正确吗？检查你的日历...')">
+                    <div class="story-content" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📖</div>
+                        <h3 class="story-title" style="color: #0088ff;">银之钥</h3>
+                        <div class="story-meta">洛夫克拉夫特 · 1926年</div>
+                        <p class="story-excerpt" style="margin-top: 15px;">在梦境的深处，有一把银色的钥匙，它能打开通往幻梦境的门...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 启示区域 -->
+    <section class="about-section" id="about" style="text-align: center; padding: 80px 20px; position: relative;">
+        <div style="font-size: 5rem; margin-bottom: 30px; display: inline-block; animation: symbolFloat 5s ease-in-out infinite;">◎</div>
+        <h2 class="section-title" style="margin-bottom: 40px;">启示录</h2>
+        <div style="max-width: 700px; margin: 0 auto; line-height: 2; color: rgba(212,212,212,0.7); font-size: 1.1rem;">
+            <p>欢迎来到深渊书库——一个收集失落知识的禁忌之地。</p>
+            <p style="margin-top: 20px;">在这里，我们珍藏着来自洛夫克拉夫特宇宙的古老传说。每一页都浸透着疯狂，每一行都隐藏着不可名状的真相。</p>
+            <p style="margin-top: 20px; color: var(--glow-green); opacity: 0.7;">
+                ⚠ 警告：阅读这些文字可能会导致理智的永久损失。
+            </p>
+            <p style="margin-top: 30px; font-style: italic; color: rgba(212,212,212,0.4);">
+                "我们生活在一个无知的平静小岛上，被黑暗的海洋包围，而这海洋本就不应该被远航探索。"<br>
+                —— H.P. 洛夫克拉夫特
+            </p>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <span class="footer-sigil">⛧</span>
+        <p>深渊书库 &copy; 永恒 <span style="color: var(--glow-green);">Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn</span></p>
+        <p style="margin-top: 10px;">在拉莱耶的宅邸中，沉睡的克苏鲁静静等待</p>
+    </footer>
+
+    <!-- 阅读面板覆盖层 -->
+    <div class="reading-panel-overlay" id="reading-overlay" onclick="closeReading()"></div>
+
+    <!-- 阅读面板 -->
+    <div class="reading-panel" id="reading-panel">
+        <div class="reading-header">
+            <button class="close-reading" onclick="closeReading()">✕</button>
+            <h2 class="reading-title" id="reading-title"></h2>
+            <div class="reading-meta" id="reading-meta"></div>
+        </div>
+        <div class="reading-body" id="reading-body"></div>
+    </div>
+
+    <!-- 古神低语 -->
+    <div class="whisper" id="whisper"></div>
+
+    <!-- 页面扭曲效果 -->
+    <div class="page-distortion" id="page-distortion"></div>
+
+    <!-- ========== 疯狂之眼覆盖层 ========== -->
+    <div class="madness-eye-overlay" id="madness-eye-overlay">
+        <div class="scanlines"></div>
+        <div class="madness-title" id="madness-title">你看到了<br>不该看的</div>
+        <div class="madness-warning">你的理智已完全崩溃</div>
+        <button class="madness-reset-btn" onclick="resetMadness()">遗忘一切，重新开始</button>
+        <!-- 眼睛将由 JavaScript 动态生成 -->
+    </div>
+
+    <script>
+        // 故事内容数据
+        const stories = [
+            {
+                title: '克苏鲁的呼唤',
+                author: 'H.P. Lovecraft',
+                year: '1928',
+                content: `<p>我认为，世界上最仁慈的事莫过于人类心灵无法将其所有内容相互关联。我们栖身于一座名为无知的平静小岛，处于漆黑的无尽海洋之中，而这海洋本不应被远航探索。迄今为止，各种科学都在朝着它们各自的方向发展，对我们几乎无害；但总有一天，知识的分离碎片会被拼合在一起，从而展现出一种可怕的现实图景，揭示出人类在其中的可怕地位——这景象要么让我们发疯，要么让我们逃离这道光芒，奔向一个崭新黑暗时代的宁静与安全。</p>
+<p>正是在这样的情况下，我获得了与克苏鲁相关的那些可怖的知识，这些知识让我的精神陷入了险境。现在我要做的，就是把所有分散的事实公之于众，让读者自行判断应该相信什么。</p>`
+            },
+            {
+                title: '墙中之鼠',
+                author: 'H.P. Lovecraft',
+                year: '1924',
+                content: `<p>即使在回顾了所有的证据之后，我依然不确定那些声音是真实的还是我想象的产物。但在某种意义上，这两种可能性都同样可怕——如果那些声音是真实的，那我面临的威胁是不言而喻的；如果是我的想象，那我恐怕已经失去了理智。</p>
+<p>事情开始于我搬进那栋位于古老村庄边缘的都铎式老宅的第一晚。房子已有三百多年的历史，租金低得令人不安，但乡下的宁静和古老的建筑风格深深吸引了我。</p>`
+            },
+            {
+                title: '疯狂山脉',
+                author: 'H.P. Lovecraft',
+                year: '1931',
+                content: `<p>我必须坦白，我所见之事已经永远地摧毁了我对宇宙的既有认知。在那片被诅咒的南极冰原之下，沉睡着一种远比人类古老的智慧生命。它们不是神，虽然人类会这样称呼它们；它们只是这片土地真正的主人。</p>
+<p>那些山峰的形状如此规整，如此几何化，以至于它们不可能是自然形成的。六边形的柱状结构以一种完美的秩序排列，延伸至视线的尽头。</p>`
+            },
+            {
+                title: '印斯茅斯之影',
+                author: 'H.P. Lovecraft',
+                year: '1931',
+                content: `<p>即使在事件发生多年之后，我依然无法完全理解我在那个被诅咒的海港小镇所经历的一切。但我知道，我必须把这些事情写下来，不仅仅是为了我自己，也是为了警告那些可能步我后尘的人。</p>
+<p>当我第一次看到印斯茅斯时，我就感到了一种难以名状的不安。空气中弥漫着一股腐烂的鱼腥味，街道上空无一人，破旧的房屋歪歪斜斜地立在那里。</p>`
+            },
+            {
+                title: '达贡',
+                author: 'H.P. Lovecraft',
+                year: '1917',
+                content: `<p>我要用最后的理智写下这些文字。窗框上已经准备好了左轮手枪，因为我不确定自己能否在寄出这封信之前保持清醒。这些事情听起来如此荒谬，如此疯狂。</p>
+<p>那是一个夜晚，月光昏暗，海面异常平静。我正在打盹，突然感到船底被什么东西刮过。当我向下看时，我看到了它——一大片陆地从海中升起。</p>`
+            },
+            {
+                title: '星之彩',
+                author: 'H.P. Lovecraft',
+                year: '1927',
+                content: `<p>没有人类的语言能够描述那种颜色。它不是光谱中的任何一种，也不是任何已知颜色的组合。当我第一次看到它时，我意识到人类的眼睛其实一直在过滤掉某些东西。</p>
+<p>事情始于那个夏夜。一颗陨石划过天际，坠落在纳撒尼尔·温盖特·皮斯利的农场里。作为一名退休的天文学家，皮斯利先生对这次撞击感到欣喜若狂。</p>`
+            }
+        ];
+
+        // 疯狂值系统
+        let sanity = 100;
+        let isMadnessActive = false;
+        let madnessOverlayActive = false;
+
+        // 古神低语集
+        const whispers = [
+            "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn...",
+            "你听到了吗？从深渊传来的呼唤...",
+            "那扇门正在打开...",
+            "它们在注视着你...",
+            "不要回头看...",
+            "时间是一种幻觉...",
+            "你的理智正在流失...",
+            "深渊也在凝视着你...",
+            "那些星星的位置并不正确...",
+            "在梦中，你已经见过它们了..."
+        ];
+
+        // 疯狂低语文字
+        const madnessWhispers = [
+            "你看到了",
+            "它在看你",
+            "不要闭眼",
+            "看着我",
+            "深渊",
+            "醒来",
+            "不要",
+            "为什么",
+            "回来",
+            "别走",
+            "看到了吗",
+            "永远"
+        ];
+
+        // 符文集
+        const runes = '☿♄♃♆☽☉⛧◎⟁△▽◇○●□■';
+
+        // 初始化粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // 眼睛跟随鼠标
+        function setupEyeTracking() {
+            const pupil = document.getElementById('pupil');
+            const eyeOuter = document.querySelector('.eye-outer');
+            
+            document.addEventListener('mousemove', (e) => {
+                const eyeRect = eyeOuter.getBoundingClientRect();
+                const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+                const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+                
+                const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
+                const distance = Math.min(20, Math.hypot(e.clientX - eyeCenterX, e.clientY - eyeCenterY) / 10);
+                
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                pupil.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        }
+
+        // 降低理智值
+        function decreaseSanity(amount) {
+            sanity = Math.max(0, sanity - amount);
+            updateSanityDisplay();
+            
+            if (sanity <= 0 && !madnessOverlayActive) {
+                triggerFinalMadness();
+            } else if (sanity <= 30 && !isMadnessActive) {
+                triggerMinorMadness();
+            }
+        }
+
+        // 更新理智值显示
+        function updateSanityDisplay() {
+            const bar = document.getElementById('sanity-bar');
+            const value = document.getElementById('sanity-value');
+            const meter = document.getElementById('sanity-meter');
+            
+            bar.style.width = sanity + '%';
+            value.textContent = Math.round(sanity);
+            
+            if (sanity < 50) {
+                bar.style.background = `linear-gradient(90deg, var(--blood-red), var(--elder-gold))`;
+            }
+            if (sanity < 30) {
+                bar.style.background = `var(--blood-red)`;
+                value.style.color = 'var(--blood-red)';
+                value.style.textShadow = '0 0 5px var(--blood-red)';
+                meter.classList.add('danger');
+            }
+        }
+
+        // 触发轻微疯狂效果
+        function triggerMinorMadness() {
+            isMadnessActive = true;
+            document.body.classList.add('madness');
+            
+            setTimeout(() => {
+                document.body.classList.remove('madness');
+                isMadnessActive = false;
+            }, 3000);
+        }
+
+        // 触发最终疯狂 - 恐怖眼睛效果
+        function triggerFinalMadness() {
+            madnessOverlayActive = true;
+            const overlay = document.getElementById('madness-eye-overlay');
+            
+            // 清空之前的眼睛
+            const existingEyes = overlay.querySelectorAll('.mad-eye, .madness-whisper, .eye-pulse-ring');
+            existingEyes.forEach(el => el.remove());
+            
+            // 生成恐怖眼睛
+            const eyeCount = window.innerWidth < 768 ? 8 : 15;
+            for (let i = 0; i < eyeCount; i++) {
+                createMadEye(overlay, i);
+            }
+            
+            // 生成脉冲环
+            for (let i = 0; i < 5; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'eye-pulse-ring';
+                ring.style.setProperty('--ring-size', (200 + i * 100) + 'px');
+                ring.style.setProperty('--ring-delay', (i * 0.5) + 's');
+                overlay.appendChild(ring);
+            }
+            
+            // 生成疯狂低语文字
+            createMadnessWhispers(overlay);
+            
+            // 激活覆盖层
+            overlay.classList.add('active');
+            document.body.classList.add('madness');
+        }
+
+        // 创建恐怖眼睛
+        function createMadEye(container, index) {
+            const eye = document.createElement('div');
+            eye.className = 'mad-eye';
+            
+            // 随机位置
+            const x = 10 + Math.random() * 80;
+            const y = 10 + Math.random() * 80;
+            
+            // 随机大小
+            const size = 60 + Math.random() * 120;
+            
+            // 随机颜色
+            const colors = ['#4a0a0a', '#3a0a3a', '#0a3a0a', '#2a2a0a', '#0a0a4a'];
+            const irisColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // 随机动画参数
+            const twitchSpeed = 1 + Math.random() * 3;
+            const eyeRotate = (Math.random() - 0.5) * 20;
+            const crackAngle = Math.random() * 180;
+            
+            eye.style.left = x + '%';
+            eye.style.top = y + '%';
+            eye.style.setProperty('--eye-size', size + 'px');
+            eye.style.setProperty('--iris-color', irisColor);
+            eye.style.setProperty('--twitch-speed', twitchSpeed + 's');
+            eye.style.setProperty('--eye-rotate', eyeRotate + 'deg');
+            eye.style.setProperty('--crack-angle', crackAngle + 'deg');
+            eye.style.transitionDelay = (index * 0.1) + 's';
+            eye.style.zIndex = Math.floor(Math.random() * 10);
+            
+            // 眼睛HTML结构
+            eye.innerHTML = `
+                <div class="mad-eye-outer">
+                    <div class="mad-vein" style="left: 10%; --vein-speed: ${2 + Math.random() * 2}s; --vein-start: -15deg; --vein-end: 15deg;"></div>
+                    <div class="mad-vein" style="left: 30%; --vein-speed: ${1.5 + Math.random() * 2}s; --vein-start: -10deg; --vein-end: 20deg;"></div>
+                    <div class="mad-vein" style="right: 10%; --vein-speed: ${2 + Math.random() * 3}s; --vein-start: 10deg; --vein-end: -15deg;"></div>
+                    <div class="mad-vein" style="right: 30%; --vein-speed: ${1 + Math.random() * 2}s; --vein-start: 5deg; --vein-end: -20deg;"></div>
+                    <div class="mad-eye-iris">
+                        <div class="mad-eye-pupil"></div>
+                    </div>
+                </div>
+            `;
+            
+            // 让眼睛跟随鼠标
+            document.addEventListener('mousemove', (e) => {
+                const rect = eye.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                const distance = Math.min(10, Math.hypot(e.clientX - centerX, e.clientY - centerY) / 30);
+                
+                const iris = eye.querySelector('.mad-eye-iris');
+                if (iris) {
+                    const x = Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    iris.style.transform = `translate(${x}px, ${y}px)`;
+                }
+            });
+            
+            container.appendChild(eye);
+        }
+
+        // 创建疯狂低语文字
+        function createMadnessWhispers(container) {
+            for (let i = 0; i < 10; i++) {
+                const whisper = document.createElement('div');
+                whisper.className = 'madness-whisper';
+                whisper.textContent = madnessWhispers[Math.floor(Math.random() * madnessWhispers.length)];
+                
+                whisper.style.left = (10 + Math.random() * 80) + '%';
+                whisper.style.top = (10 + Math.random() * 80) + '%';
+                whisper.style.setProperty('--drift-duration', (3 + Math.random() * 5) + 's');
+                whisper.style.setProperty('--drift-x', ((Math.random() - 0.5) * 50) + 'px');
+                whisper.style.setProperty('--drift-y', ((Math.random() - 0.5) * 50) + 'px');
+                whisper.style.setProperty('--drift-rotate', ((Math.random() - 0.5) * 20) + 'deg');
+                whisper.style.animationDelay = (Math.random() * 3) + 's';
+                whisper.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+                
+                container.appendChild(whisper);
+            }
+        }
+
+        // 重置疯狂状态
+        function resetMadness() {
+            sanity = 100;
+            madnessOverlayActive = false;
+            isMadnessActive = false;
+            
+            const overlay = document.getElementById('madness-eye-overlay');
+            overlay.classList.remove('active');
+            document.body.classList.remove('madness');
+            
+            // 重置UI
+            const bar = document.getElementById('sanity-bar');
+            const value = document.getElementById('sanity-value');
+            const meter = document.getElementById('sanity-meter');
+            
+            bar.style.width = '100%';
+            bar.style.background = 'linear-gradient(90deg, var(--glow-green), var(--elder-gold))';
+            value.textContent = '100';
+            value.style.color = 'var(--glow-green)';
+            value.style.textShadow = '0 0 5px var(--glow-green)';
+            meter.classList.remove('danger');
+        }
+
+        // 随机疯狂效果
+        function randomMadnessEffect() {
+            const effects = [
+                () => {
+                    const distortion = document.getElementById('page-distortion');
+                    distortion.classList.add('active');
+                    setTimeout(() => distortion.classList.remove('active'), 200);
+                },
+                () => {
+                    document.querySelectorAll('.story-title, h2, h3').forEach(el => {
+                        el.style.transform = `skewX(${(Math.random() - 0.5) * 5}deg)`;
+                        setTimeout(() => el.style.transform = '', 500);
+                    });
+                },
+                () => {
+                    showWhisper(whispers[Math.floor(Math.random() * whispers.length)]);
+                }
+            ];
+            
+            if (sanity < 70 && Math.random() < 0.3 && !madnessOverlayActive) {
+                effects[Math.floor(Math.random() * effects.length)]();
+            }
+        }
+
+        // 显示古神低语
+        function showWhisper(text) {
+            const whisper = document.getElementById('whisper');
+            whisper.textContent = text;
+            whisper.classList.add('visible');
+            decreaseSanity(2);
+            
+            setTimeout(() => {
+                whisper.classList.remove('visible');
+            }, 4000);
+        }
+
+        // 打开故事
+        function openStory(index) {
+            if (madnessOverlayActive) return;
+            
+            const story = stories[index];
+            const panel = document.getElementById('reading-panel');
+            const overlay = document.getElementById('reading-overlay');
+            
+            document.getElementById('reading-title').textContent = story.title;
+            document.getElementById('reading-meta').textContent = `${story.author} · ${story.year}`;
+            document.getElementById('reading-body').innerHTML = story.content;
+            
+            panel.classList.add('active');
+            overlay.classList.add('active');
+            
+            decreaseSanity(5);
+            
+            setTimeout(() => {
+                if (Math.random() < 0.5 && !madnessOverlayActive) {
+                    showWhisper('继续读下去...真相就在下一页...');
+                }
+            }, 3000);
+        }
+
+        // 关闭阅读面板
+        function closeReading() {
+            document.getElementById('reading-panel').classList.remove('active');
+            document.getElementById('reading-overlay').classList.remove('active');
+        }
+
+        // 创建随机符文效果
+        function createRuneEffect(x, y) {
+            if (madnessOverlayActive) return;
+            
+            const rune = document.createElement('div');
+            rune.className = 'rune-decoration';
+            rune.textContent = runes[Math.floor(Math.random() * runes.length)];
+            rune.style.left = x + 'px';
+            rune.style.top = y + 'px';
+            document.body.appendChild(rune);
+            
+            setTimeout(() => rune.remove(), 2000);
+        }
+
+        // 点击时创建符文
+        document.addEventListener('click', (e) => {
+            if (Math.random() < 0.3 && !madnessOverlayActive) {
+                createRuneEffect(e.clientX, e.clientY);
+            }
+        });
+
+        // 定期降低理智
+        setInterval(() => {
+            if (!madnessOverlayActive) {
+                decreaseSanity(0.5);
+                randomMadnessEffect();
+            }
+        }, 10000);
+
+        // 页面加载时的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            setupEyeTracking();
+            
+            setTimeout(() => {
+                showWhisper('欢迎来到深渊...你的理智还能支撑多久？');
+            }, 3000);
+        });
+
+        // 鼠标移动时的符文效果
+        let lastRuneTime = 0;
+        document.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastRuneTime > 2000 && Math.random() < 0.05 && !madnessOverlayActive) {
+                createRuneEffect(e.clientX, e.clientY);
+                lastRuneTime = now;
+            }
+        });
+
+        // 滚动效果
+        let lastScrollY = 0;
+        window.addEventListener('scroll', () => {
+            if (madnessOverlayActive) return;
+            
+            const scrollY = window.scrollY;
+            const diff = Math.abs(scrollY - lastScrollY);
+            
+            if (diff > 100) {
+                decreaseSanity(0.3);
+                lastScrollY = scrollY;
+            }
+        });
+
+        // 键盘效果
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeReading();
+            }
+            // 调试：按 M 键触发疯狂效果
+            if (e.key === 'm' || e.key === 'M') {
+                triggerFinalMadness();
+            }
+        });
+
+        // 点击标题快速测试
+        document.querySelector('.hero-title').addEventListener('click', () => {
+            sanity = 0;
+            triggerFinalMadness();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 11 模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            user-select: none;
+        }
+        
+        :root {
+            --accent-color: #0078d4;
+            --accent-hover: #006cc1;
+            --text-color: #323130;
+            --text-secondary: #605e5c;
+            --background: #f3f3f3;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border-color: #e0e0e0;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+        
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #89CFF0 0%, #A7C7E7 25%, #B4D7E8 50%, #C2E0F0 75%, #D1E9F5 100%);
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .desktop {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .desktop-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 25%, #3a7cb8 50%, #4a9fd9 75%, #6ab7ea 100%);
+            z-index: 0;
+        }
+        
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 0 16px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .taskbar-left {
+            display: flex;
+            align-items: center;
+            margin-right: auto;
+        }
+        
+        .taskbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .taskbar-right {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            gap: 8px;
+        }
+        
+        .start-button {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .start-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .start-button:active {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .windows-logo {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .search-box {
+            height: 36px;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 18px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 0 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .search-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-color);
+            outline: none;
+        }
+        
+        .taskbar-app {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .taskbar-app:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .taskbar-app.active {
+            background: rgba(0, 0, 0, 0.08);
+        }
+        
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+            height: 100%;
+        }
+        
+        .system-tray-item {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .system-tray-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .time-display {
+            font-size: 12px;
+            text-align: right;
+            line-height: 1.3;
+        }
+        
+        .desktop-icons {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .desktop-icon:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .desktop-icon-image {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .desktop-icon-text {
+            font-size: 12px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 70px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .start-menu {
+            position: fixed;
+            bottom: 56px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .start-menu.visible {
+            display: flex;
+        }
+        
+        .search-container {
+            padding: 16px 24px 8px;
+        }
+        
+        .search-input {
+            width: 100%;
+            height: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 0 16px;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.03);
+            outline: none;
+            transition: border 0.2s;
+        }
+        
+        .search-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+        }
+        
+        .start-menu-content {
+            display: flex;
+            flex: 1;
+            padding: 16px;
+            gap: 16px;
+        }
+        
+        .pinned-apps {
+            flex: 1;
+        }
+        
+        .recommended {
+            flex: 1;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-color);
+        }
+        
+        .pinned-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .pinned-app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .pinned-app:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .pinned-app-image {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pinned-app-text {
+            font-size: 12px;
+            text-align: center;
+            color: var(--text-color);
+        }
+        
+        .recommended-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .recommended-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .recommended-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .recommended-image {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #0078d4, #50e6ff);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .recommended-info {
+            flex: 1;
+        }
+        
+        .recommended-name {
+            font-size: 13px;
+            color: var(--text-color);
+        }
+        
+        .recommended-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .window {
+            position: absolute;
+            min-width: 400px;
+            min-height: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - 48px) !important;
+            border-radius: 0;
+        }
+        
+        .window.active {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .window-header {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: default;
+        }
+        
+        .window-title {
+            flex: 1;
+            font-size: 12px;
+            color: var(--text-color);
+            padding: 0 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .window-controls {
+            display: flex;
+            margin-left: auto;
+        }
+        
+        .window-control {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        
+        .window-control:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .window-control.minimize:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .window-control.maximize:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .window-control.close:hover {
+            background: #e81123;
+            color: white;
+        }
+        
+        .window-control svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .window-content {
+            flex: 1;
+            padding: 16px;
+            overflow: auto;
+        }
+        
+        .context-menu {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: 4px;
+            min-width: 200px;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.1s ease;
+        }
+        
+        .context-menu.visible {
+            display: block;
+        }
+        
+        .context-menu-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.1s;
+        }
+        
+        .context-menu-item:hover {
+            background: rgba(0, 120, 212, 0.1);
+            color: var(--accent-color);
+        }
+        
+        .context-menu-separator {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+        
+        .notification-center {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 48px;
+            width: 380px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
+            z-index: 998;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .notification-center.visible {
+            transform: translateX(0);
+        }
+        
+        .notification-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .notification-content {
+            flex: 1;
+            padding: 16px;
+            overflow: auto;
+        }
+        
+        .notification-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .notification-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-color);
+        }
+        
+        .notification-card-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .quick-actions {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+            background: rgba(0, 0, 0, 0.03);
+        }
+        
+        .quick-action:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+        
+        .quick-action-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .quick-action-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .file-explorer {
+            display: flex;
+            height: 100%;
+        }
+        
+        .file-sidebar {
+            width: 200px;
+            background: rgba(0, 0, 0, 0.02);
+            border-right: 1px solid var(--border-color);
+            padding: 12px;
+        }
+        
+        .file-content {
+            flex: 1;
+            padding: 16px;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-color);
+            transition: background 0.1s;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(0, 120, 212, 0.1);
+            color: var(--accent-color);
+        }
+        
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 100px);
+            gap: 16px;
+        }
+        
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        
+        .file-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+        
+        .file-item-image {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .file-item-text {
+            font-size: 12px;
+            text-align: center;
+            max-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .calculator {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .calc-display {
+            padding: 16px 24px;
+            text-align: right;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .calc-previous {
+            font-size: 14px;
+            color: var(--text-secondary);
+            height: 20px;
+        }
+        
+        .calc-current {
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--text-color);
+            margin-top: 4px;
+        }
+        
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 8px;
+            flex: 1;
+        }
+        
+        .calc-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: background 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .calc-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+        
+        .calc-btn.operator {
+            background: rgba(0, 120, 212, 0.1);
+            color: var(--accent-color);
+        }
+        
+        .calc-btn.operator:hover {
+            background: rgba(0, 120, 212, 0.2);
+        }
+        
+        .calc-btn.equals {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .calc-btn.equals:hover {
+            background: var(--accent-hover);
+        }
+        
+        @media (max-width: 768px) {
+            .start-menu {
+                width: 90%;
+                height: 60vh;
+            }
+            
+            .window {
+                min-width: 300px;
+                min-height: 250px;
+            }
+            
+            .taskbar {
+                height: 44px;
+            }
+            
+            .notification-center {
+                width: 100%;
+            }
+            
+            .file-explorer {
+                flex-direction: column;
+            }
+            
+            .file-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .pinned-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .search-box {
+                width: 150px;
+            }
+            
+            .desktop-icons {
+                grid-template-columns: repeat(auto-fill, 70px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop">
+        <div class="desktop-bg"></div>
+        
+        <div class="desktop-icons">
+            <div class="desktop-icon" data-app="explorer">
+                <div class="desktop-icon-image">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <path d="M4 8h16l4 4h20v28H4z" fill="#FFC107"/>
+                        <path d="M4 16h40v24H4z" fill="#FFD54F"/>
+                    </svg>
+                </div>
+                <div class="desktop-icon-text">文件资源管理器</div>
+            </div>
+            <div class="desktop-icon" data-app="calculator">
+                <div class="desktop-icon-image">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <rect x="8" y="4" width="32" height="40" rx="4" fill="#2196F3"/>
+                        <rect x="12" y="10" width="24" height="12" rx="2" fill="#E3F2FD"/>
+                        <circle cx="16" cy="28" r="3" fill="#E3F2FD"/>
+                        <circle cx="24" cy="28" r="3" fill="#E3F2FD"/>
+                        <circle cx="32" cy="28" r="3" fill="#E3F2FD"/>
+                        <circle cx="16" cy="36" r="3" fill="#E3F2FD"/>
+                        <circle cx="24" cy="36" r="3" fill="#E3F2FD"/>
+                        <circle cx="32" cy="36" r="3" fill="#4CAF50"/>
+                    </svg>
+                </div>
+                <div class="desktop-icon-text">计算器</div>
+            </div>
+            <div class="desktop-icon" data-app="notepad">
+                <div class="desktop-icon-image">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#90CAF9"/>
+                        <path d="M14 12h20v4H14z" fill="#E3F2FD"/>
+                        <path d="M14 20h20v4H14z" fill="#E3F2FD"/>
+                        <path d="M14 28h12v4H14z" fill="#E3F2FD"/>
+                    </svg>
+                </div>
+                <div class="desktop-icon-text">记事本</div>
+            </div>
+            <div class="desktop-icon" data-app="settings">
+                <div class="desktop-icon-image">
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="#607D8B"/>
+                    </svg>
+                </div>
+                <div class="desktop-icon-text">设置</div>
+            </div>
+        </div>
+        
+        <div id="windows-container"></div>
+        
+        <div class="taskbar">
+            <div class="taskbar-left">
+                <button class="start-button" id="start-button">
+                    <svg class="windows-logo" viewBox="0 0 24 24" fill="#0078d4">
+                        <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+                    </svg>
+                </button>
+                <div class="search-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#605e5c" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" placeholder="搜索" id="search-input">
+                </div>
+            </div>
+            <div class="taskbar-center" id="taskbar-apps">
+            </div>
+            <div class="taskbar-right">
+                <div class="system-tray" id="system-tray">
+                    <div class="system-tray-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div class="system-tray-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
+                        </svg>
+                    </div>
+                    <div class="system-tray-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="time-display" id="time-display">
+                    <div id="current-time">09:41</div>
+                    <div id="current-date">2024/1/1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="start-menu" id="start-menu">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="输入搜索内容" id="start-search">
+        </div>
+        <div class="start-menu-content">
+            <div class="pinned-apps">
+                <div class="section-title">已固定</div>
+                <div class="pinned-grid">
+                    <div class="pinned-app" data-app="explorer">
+                        <div class="pinned-app-image">
+                            <svg width="24" height="24" viewBox="0 0 48 48">
+                                <path d="M4 8h16l4 4h20v28H4z" fill="#FFC107"/>
+                                <path d="M4 16h40v24H4z" fill="#FFD54F"/>
+                            </svg>
+                        </div>
+                        <div class="pinned-app-text">文件资源管理器</div>
+                    </div>
+                    <div class="pinned-app" data-app="calculator">
+                        <div class="pinned-app-image">
+                            <svg width="24" height="24" viewBox="0 0 48 48">
+                                <rect x="8" y="4" width="32" height="40" rx="4" fill="#2196F3"/>
+                                <rect x="12" y="10" width="24" height="12" rx="2" fill="#E3F2FD"/>
+                                <circle cx="16" cy="28" r="3" fill="#E3F2FD"/>
+                                <circle cx="24" cy="28" r="3" fill="#E3F2FD"/>
+                                <circle cx="32" cy="28" r="3" fill="#E3F2FD"/>
+                                <circle cx="16" cy="36" r="3" fill="#E3F2FD"/>
+                                <circle cx="24" cy="36" r="3" fill="#E3F2FD"/>
+                                <circle cx="32" cy="36" r="3" fill="#4CAF50"/>
+                            </svg>
+                        </div>
+                        <div class="pinned-app-text">计算器</div>
+                    </div>
+                    <div class="pinned-app" data-app="notepad">
+                        <div class="pinned-app-image">
+                            <svg width="24" height="24" viewBox="0 0 48 48">
+                                <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#90CAF9"/>
+                                <path d="M14 12h20v4H14z" fill="#E3F2FD"/>
+                                <path d="M14 20h20v4H14z" fill="#E3F2FD"/>
+                                <path d="M14 28h12v4H14z" fill="#E3F2FD"/>
+                            </svg>
+                        </div>
+                        <div class="pinned-app-text">记事本</div>
+                    </div>
+                    <div class="pinned-app" data-app="settings">
+                        <div class="pinned-app-image">
+                            <svg width="24" height="24" viewBox="0 0 24 24">
+                                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="#607D8B"/>
+                            </svg>
+                        </div>
+                        <div class="pinned-app-text">设置</div>
+                    </div>
+                </div>
+            </div>
+            <div class="recommended">
+                <div class="section-title">推荐</div>
+                <div class="recommended-list">
+                    <div class="recommended-item">
+                        <div class="recommended-image">W</div>
+                        <div class="recommended-info">
+                            <div class="recommended-name">文档.docx</div>
+                            <div class="recommended-time">刚刚</div>
+                        </div>
+                    </div>
+                    <div class="recommended-item">
+                        <div class="recommended-image">W</div>
+                        <div class="recommended-info">
+                            <div class="recommended-name">项目计划.xlsx</div>
+                            <div class="recommended-time">2小时前</div>
+                        </div>
+                    </div>
+                    <div class="recommended-item">
+                        <div class="recommended-image">W</div>
+                        <div class="recommended-info">
+                            <div class="recommended-name">演示文稿.pptx</div>
+                            <div class="recommended-time">昨天</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification-center" id="notification-center">
+        <div class="notification-header">
+            <div class="notification-title">通知</div>
+            <div class="quick-actions-grid">
+                <div class="quick-action">
+                    <svg class="quick-action-icon" width="24" height="24" viewBox="0 0 24 24" fill="#0078d4">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <div class="quick-action-text">专注</div>
+                </div>
+                <div class="quick-action">
+                    <svg class="quick-action-icon" width="24" height="24" viewBox="0 0 24 24" fill="#0078d4">
+                        <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
+                    </svg>
+                    <div class="quick-action-text">投影</div>
+                </div>
+                <div class="quick-action">
+                    <svg class="quick-action-icon" width="24" height="24" viewBox="0 0 24 24" fill="#0078d4">
+                        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                    </svg>
+                    <div class="quick-action-text">网络</div>
+                </div>
+            </div>
+        </div>
+        <div class="notification-content">
+            <div class="notification-card">
+                <div class="notification-card-title">系统更新</div>
+                <div class="notification-card-text">Windows 11 版本 23H2 已准备就绪，您可以立即安装。</div>
+            </div>
+            <div class="notification-card">
+                <div class="notification-card-title">安全中心</div>
+                <div class="notification-card-text">您的设备受到保护，所有安全检查均通过。</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="refresh">刷新</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="view">查看</div>
+        <div class="context-menu-item" data-action="sort">排序方式</div>
+        <div class="context-menu-item" data-action="new">新建</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="display">显示设置</div>
+        <div class="context-menu-item" data-action="personalize">个性化</div>
+    </div>
+    
+    <script>
+        const state = {
+            windows: [],
+            activeWindow: null,
+            windowCounter: 0,
+            zIndexCounter: 100,
+            isDragging: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragWindowStartX: 0,
+            dragWindowStartY: 0,
+            currentDragWindow: null,
+            startMenuVisible: false,
+            notificationsVisible: false
+        };
+        
+        const settingsIcon = `<svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="#607D8B"/>
+        </svg>`;
+        
+        const apps = {
+            explorer: {
+                title: '文件资源管理器',
+                width: 700,
+                height: 500,
+                icon: `<svg width="16" height="16" viewBox="0 0 48 48">
+                    <path d="M4 8h16l4 4h20v28H4z" fill="#FFC107"/>
+                    <path d="M4 16h40v24H4z" fill="#FFD54F"/>
+                </svg>`,
+                content: createFileExplorerContent
+            },
+            calculator: {
+                title: '计算器',
+                width: 350,
+                height: 480,
+                icon: `<svg width="16" height="16" viewBox="0 0 48 48">
+                    <rect x="8" y="4" width="32" height="40" rx="4" fill="#2196F3"/>
+                    <rect x="12" y="10" width="24" height="12" rx="2" fill="#E3F2FD"/>
+                </svg>`,
+                content: createCalculatorContent
+            },
+            notepad: {
+                title: '记事本',
+                width: 600,
+                height: 400,
+                icon: `<svg width="16" height="16" viewBox="0 0 48 48">
+                    <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#90CAF9"/>
+                </svg>`,
+                content: createNotepadContent
+            },
+            settings: {
+                title: '设置',
+                width: 900,
+                height: 600,
+                icon: settingsIcon,
+                content: createSettingsContent
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            setupEventListeners();
+            setTimeout(() => {
+                openApp('explorer');
+            }, 500);
+        });
+        
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+            document.getElementById('current-date').textContent = `${year}/${month}/${day}`;
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('start-button').addEventListener('click', toggleStartMenu);
+            
+            document.getElementById('start-search').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            document.querySelectorAll('.pinned-app').forEach(app => {
+                app.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const appName = this.getAttribute('data-app');
+                    openApp(appName);
+                    hideStartMenu();
+                });
+            });
+            
+            document.querySelectorAll('.desktop-icon').forEach(icon => {
+                icon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const appName = this.getAttribute('data-app');
+                    openApp(appName);
+                });
+            });
+            
+            document.querySelector('.desktop').addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (e.target === this || e.target.classList.contains('desktop-bg')) {
+                    showContextMenu(e.clientX, e.clientY);
+                }
+            });
+            
+            document.addEventListener('click', function() {
+                hideStartMenu();
+                hideContextMenu();
+                hideNotifications();
+            });
+            
+            document.getElementById('system-tray').addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleNotifications();
+            });
+            
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('window-header') || 
+                    e.target.closest('.window-header')) {
+                    const windowEl = e.target.closest('.window');
+                    if (windowEl && !windowEl.classList.contains('maximized')) {
+                        startDragging(windowEl, e);
+                    }
+                }
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (state.isDragging && state.currentDragWindow) {
+                    const dx = e.clientX - state.dragStartX;
+                    const dy = e.clientY - state.dragStartY;
+                    
+                    state.currentDragWindow.style.left = (state.dragWindowStartX + dx) + 'px';
+                    state.currentDragWindow.style.top = (state.dragWindowStartY + dy) + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                state.isDragging = false;
+                state.currentDragWindow = null;
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.window-control')) {
+                    const control = e.target.closest('.window-control');
+                    const windowEl = control.closest('.window');
+                    const windowId = windowEl.id;
+                    
+                    if (control.classList.contains('minimize')) {
+                        minimizeWindow(windowId);
+                    } else if (control.classList.contains('maximize')) {
+                        maximizeWindow(windowId);
+                    } else if (control.classList.contains('close')) {
+                        closeWindow(windowId);
+                    }
+                }
+            });
+        }
+        
+        function toggleStartMenu() {
+            state.startMenuVisible = !state.startMenuVisible;
+            const startMenu = document.getElementById('start-menu');
+            
+            if (state.startMenuVisible) {
+                startMenu.classList.add('visible');
+                document.getElementById('start-search').focus();
+            } else {
+                startMenu.classList.remove('visible');
+            }
+        }
+        
+        function hideStartMenu() {
+            state.startMenuVisible = false;
+            document.getElementById('start-menu').classList.remove('visible');
+        }
+        
+        function toggleNotifications() {
+            state.notificationsVisible = !state.notificationsVisible;
+            const notificationCenter = document.getElementById('notification-center');
+            
+            if (state.notificationsVisible) {
+                notificationCenter.classList.add('visible');
+            } else {
+                notificationCenter.classList.remove('visible');
+            }
+        }
+        
+        function hideNotifications() {
+            state.notificationsVisible = false;
+            document.getElementById('notification-center').classList.remove('visible');
+        }
+        
+        function showContextMenu(x, y) {
+            const contextMenu = document.getElementById('context-menu');
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+            contextMenu.classList.add('visible');
+            
+            contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const action = this.getAttribute('data-action');
+                    handleContextMenuAction(action);
+                    hideContextMenu();
+                });
+            });
+        }
+        
+        function hideContextMenu() {
+            document.getElementById('context-menu').classList.remove('visible');
+        }
+        
+        function handleContextMenuAction(action) {
+            switch(action) {
+                case 'display':
+                    openApp('settings');
+                    break;
+                case 'personalize':
+                    openApp('settings');
+                    break;
+                default:
+                    console.log('Context menu action:', action);
+            }
+        }
+        
+        function openApp(appName) {
+            const appConfig = apps[appName];
+            if (!appConfig) return;
+            
+            const existingWindow = state.windows.find(w => w.app === appName);
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                if (existingWindow.minimized) {
+                    restoreWindow(existingWindow.id);
+                }
+                return;
+            }
+            
+            const windowId = 'window-' + (++state.windowCounter);
+            const windowEl = document.createElement('div');
+            windowEl.id = windowId;
+            windowEl.className = 'window';
+            windowEl.setAttribute('data-app', appName);
+            
+            const offset = (state.windowCounter - 1) * 30;
+            const left = 100 + offset;
+            const top = 50 + offset;
+            
+            windowEl.style.cssText = `
+                left: ${left}px;
+                top: ${top}px;
+                width: ${appConfig.width}px;
+                height: ${appConfig.height}px;
+                z-index: ${++state.zIndexCounter};
+            `;
+            
+            windowEl.innerHTML = `
+                <div class="window-header">
+                    <div class="window-title">${appConfig.title}</div>
+                    <div class="window-controls">
+                        <div class="window-control minimize">
+                            <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M14 8v1H3V8h11z"/>
+                            </svg>
+                        </div>
+                        <div class="window-control maximize">
+                            <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M3 3v10h10V3H3zm1 1h8v8H4V4z"/>
+                            </svg>
+                        </div>
+                        <div class="window-control close">
+                            <svg viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M9.41 8l3.29-3.29c.19-.18.19-.5 0-.7l-.7-.7c-.18-.18-.5-.19-.7 0L8 6.59 4.71 3.29c-.18-.18-.5-.19-.7 0l-.7.7c-.19.18-.19.5 0 .7L6.59 8l-3.3 3.29c-.19.18-.19.5 0 .7l.7.7c.18.18.5.19.7 0L8 9.41l3.29 3.3c.18.18.5.19.7 0l.7-.7c.19-.18.19-.5 0-.7L9.41 8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-content">
+                    ${appConfig.content()}
+                </div>
+            `;
+            
+            document.getElementById('windows-container').appendChild(windowEl);
+            
+            const windowState = {
+                id: windowId,
+                app: appName,
+                element: windowEl,
+                minimized: false,
+                maximized: false
+            };
+            state.windows.push(windowState);
+            
+            addTaskbarButton(windowId, appName, appConfig.icon);
+            focusWindow(windowId);
+            
+            windowEl.addEventListener('mousedown', function() {
+                focusWindow(windowId);
+            });
+        }
+        
+        function addTaskbarButton(windowId, appName, icon) {
+            const taskbarApps = document.getElementById('taskbar-apps');
+            const button = document.createElement('button');
+            button.className = 'taskbar-app active';
+            button.id = `taskbar-${windowId}`;
+            button.innerHTML = icon;
+            button.title = apps[appName].title;
+            
+            button.addEventListener('click', function() {
+                const windowState = state.windows.find(w => w.id === windowId);
+                if (windowState) {
+                    if (windowState.minimized) {
+                        restoreWindow(windowId);
+                    } else if (state.activeWindow === windowId) {
+                        minimizeWindow(windowId);
+                    } else {
+                        focusWindow(windowId);
+                    }
+                }
+            });
+            
+            taskbarApps.appendChild(button);
+        }
+        
+        function focusWindow(windowId) {
+            state.windows.forEach(w => {
+                w.element.classList.remove('active');
+                document.getElementById(`taskbar-${w.id}`).classList.remove('active');
+            });
+            
+            const windowState = state.windows.find(w => w.id === windowId);
+            if (windowState) {
+                windowState.element.classList.add('active');
+                windowState.element.style.zIndex = ++state.zIndexCounter;
+                document.getElementById(`taskbar-${windowId}`).classList.add('active');
+                state.activeWindow = windowId;
+            }
+        }
+        
+        function minimizeWindow(windowId) {
+            const windowState = state.windows.find(w => w.id === windowId);
+            if (windowState) {
+                windowState.element.style.display = 'none';
+                windowState.minimized = true;
+                document.getElementById(`taskbar-${windowId}`).classList.remove('active');
+                
+                const visibleWindows = state.windows.filter(w => !w.minimized);
+                if (visibleWindows.length > 0) {
+                    focusWindow(visibleWindows[visibleWindows.length - 1].id);
+                } else {
+                    state.activeWindow = null;
+                }
+            }
+        }
+        
+        function restoreWindow(windowId) {
+            const windowState = state.windows.find(w => w.id === windowId);
+            if (windowState) {
+                windowState.element.style.display = 'flex';
+                windowState.minimized = false;
+                focusWindow(windowId);
+            }
+        }
+        
+        function maximizeWindow(windowId) {
+            const windowState = state.windows.find(w => w.id === windowId);
+            if (windowState) {
+                windowState.element.classList.toggle('maximized');
+                windowState.maximized = !windowState.maximized;
+            }
+        }
+        
+        function closeWindow(windowId) {
+            const windowState = state.windows.find(w => w.id === windowId);
+            if (windowState) {
+                windowState.element.remove();
+                state.windows = state.windows.filter(w => w.id !== windowId);
+                
+                const taskbarButton = document.getElementById(`taskbar-${windowId}`);
+                if (taskbarButton) {
+                    taskbarButton.remove();
+                }
+                
+                if (state.activeWindow === windowId) {
+                    if (state.windows.length > 0) {
+                        focusWindow(state.windows[state.windows.length - 1].id);
+                    } else {
+                        state.activeWindow = null;
+                    }
+                }
+            }
+        }
+        
+        function startDragging(windowEl, event) {
+            state.isDragging = true;
+            state.currentDragWindow = windowEl;
+            state.dragStartX = event.clientX;
+            state.dragStartY = event.clientY;
+            state.dragWindowStartX = windowEl.offsetLeft;
+            state.dragWindowStartY = windowEl.offsetTop;
+        }
+        
+        function createFileExplorerContent() {
+            return `
+                <div class="file-explorer">
+                    <div class="file-sidebar">
+                        <div class="sidebar-item active">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            主页
+                        </div>
+                        <div class="sidebar-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+                            </svg>
+                            桌面
+                        </div>
+                        <div class="sidebar-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                            </svg>
+                            下载
+                        </div>
+                        <div class="sidebar-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                            </svg>
+                            文档
+                        </div>
+                        <div class="sidebar-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                            </svg>
+                            图片
+                        </div>
+                    </div>
+                    <div class="file-content">
+                        <div class="file-grid">
+                            <div class="file-item">
+                                <div class="file-item-image">
+                                    <svg width="48" height="48" viewBox="0 0 48 48">
+                                        <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#90CAF9"/>
+                                        <path d="M14 12h20v4H14z" fill="#E3F2FD"/>
+                                        <path d="M14 20h20v4H14z" fill="#E3F2FD"/>
+                                        <path d="M14 28h12v4H14z" fill="#E3F2FD"/>
+                                    </svg>
+                                </div>
+                                <div class="file-item-text">文档.docx</div>
+                            </div>
+                            <div class="file-item">
+                                <div class="file-item-image">
+                                    <svg width="48" height="48" viewBox="0 0 48 48">
+                                        <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#4CAF50"/>
+                                        <path d="M14 12h20v4H14z" fill="#C8E6C9"/>
+                                        <path d="M14 20h20v4H14z" fill="#C8E6C9"/>
+                                        <path d="M14 28h12v4H14z" fill="#C8E6C9"/>
+                                    </svg>
+                                </div>
+                                <div class="file-item-text">项目计划.xlsx</div>
+                            </div>
+                            <div class="file-item">
+                                <div class="file-item-image">
+                                    <svg width="48" height="48" viewBox="0 0 48 48">
+                                        <path d="M36 4H12c-2.2 0-4 1.8-4 4v32c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4z" fill="#FF7043"/>
+                                        <path d="M14 12h20v4H14z" fill="#FFCCBC"/>
+                                        <path d="M14 20h20v4H14z" fill="#FFCCBC"/>
+                                        <path d="M14 28h12v4H14z" fill="#FFCCBC"/>
+                                    </svg>
+                                </div>
+                                <div class="file-item-text">演示文稿.pptx</div>
+                            </div>
+                            <div class="file-item">
+                                <div class="file-item-image">
+                                    <svg width="48" height="48" viewBox="0 0 48 48">
+                                        <circle cx="24" cy="24" r="20" fill="#2196F3"/>
+                                        <path d="M24 14v10l7 7" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <div class="file-item-text">时钟.png</div>
+                            </div>
+                            <div class="file-item">
+                                <div class="file-item-image">
+                                    <svg width="48" height="48" viewBox="0 0 48 48">
+                                        <path d="M40 8H8c-2.2 0-4 1.8-4 4v24c0 2.2 1.8 4 4 4h32c2.2 0 4-1.8 4-4V12c0-2.2-1.8-4-4-4z" fill="#9C27B0"/>
+                                        <path d="M20 20l-4 8h16l-6-8-4 6-2-4z" fill="#E1BEE7"/>
+                                    </svg>
+                                </div>
+                                <div class="file-item-text">风景.jpg</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createCalculatorContent() {
+            return `
+                <div class="calculator">
+                    <div class="calc-display">
+                        <div class="calc-previous" id="calc-previous"></div>
+                        <div class="calc-current" id="calc-current">0</div>
+                    </div>
+                    <div class="calc-buttons">
+                        <button class="calc-btn operator" data-action="clear">C</button>
+                        <button class="calc-btn operator" data-action="toggle-sign">±</button>
+                        <button class="calc-btn operator" data-action="percent">%</button>
+                        <button class="calc-btn operator" data-action="operator" data-value="/">÷</button>
+                        
+                        <button class="calc-btn" data-action="number" data-value="7">7</button>
+                        <button class="calc-btn" data-action="number" data-value="8">8</button>
+                        <button class="calc-btn" data-action="number" data-value="9">9</button>
+                        <button class="calc-btn operator" data-action="operator" data-value="*">×</button>
+                        
+                        <button class="calc-btn" data-action="number" data-value="4">4</button>
+                        <button class="calc-btn" data-action="number" data-value="5">5</button>
+                        <button class="calc-btn" data-action="number" data-value="6">6</button>
+                        <button class="calc-btn operator" data-action="operator" data-value="-">−</button>
+                        
+                        <button class="calc-btn" data-action="number" data-value="1">1</button>
+                        <button class="calc-btn" data-action="number" data-value="2">2</button>
+                        <button class="calc-btn" data-action="number" data-value="3">3</button>
+                        <button class="calc-btn operator" data-action="operator" data-value="+">+</button>
+                        
+                        <button class="calc-btn" data-action="number" data-value="0">0</button>
+                        <button class="calc-btn" data-action="decimal">.</button>
+                        <button class="calc-btn" data-action="backspace">⌫</button>
+                        <button class="calc-btn equals" data-action="equals">=</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createNotepadContent() {
+            return `
+                <textarea style="width: 100%; height: 100%; border: none; resize: none; outline: none; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; padding: 8px;" placeholder="在此输入文本...">这是一个Windows模拟器中的记事本应用。
+
+您可以在这里输入任何文本内容。
+
+功能特点：
+1. 支持多行文本编辑
+2. 简洁的界面设计
+3. 响应式布局
+
+感谢使用Windows模拟器！</textarea>
+            `;
+        }
+        
+        function createSettingsContent() {
+            return `
+                <div style="display: flex; height: 100%;">
+                    <div style="width: 260px; background: rgba(0,0,0,0.02); border-right: 1px solid #e0e0e0; padding: 16px; overflow-y: auto;">
+                        <div style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: #323130;">设置</div>
+                        
+                        <div class="sidebar-item active" data-setting="system">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M4 8h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <path d="M6 12h12M6 16h12" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            系统
+                        </div>
+                        <div class="sidebar-item" data-setting="bluetooth">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M17 7l-5 5 5 5M7 7l5 5-5 5"/>
+                            </svg>
+                            蓝牙和设备
+                        </div>
+                        <div class="sidebar-item" data-setting="network">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                            </svg>
+                            网络和Internet
+                        </div>
+                        <div class="sidebar-item" data-setting="personalization">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                            </svg>
+                            个性化
+                        </div>
+                        <div class="sidebar-item" data-setting="apps">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M4 8h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="14" r="3"/>
+                            </svg>
+                            应用
+                        </div>
+                        <div class="sidebar-item" data-setting="accounts">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            账户
+                        </div>
+                        <div class="sidebar-item" data-setting="time">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                            时间和语言
+                        </div>
+                        <div class="sidebar-item" data-setting="gaming">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                            </svg>
+                            游戏
+                        </div>
+                        <div class="sidebar-item" data-setting="accessibility">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <circle cx="12" cy="4.5" r="2.5"/>
+                                <path d="M12 7.5c-2.49 0-4.5 1.01-4.5 2.25v3.75h9v-3.75c0-1.24-2.01-2.25-4.5-2.25zM12 13.5c-2.49 0-4.5 1.01-4.5 2.25V18h9v-2.25c0-1.24-2.01-2.25-4.5-2.25z"/>
+                            </svg>
+                            辅助功能
+                        </div>
+                        <div class="sidebar-item" data-setting="privacy">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                            </svg>
+                            隐私和安全性
+                        </div>
+                        <div class="sidebar-item" data-setting="update">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#605e5c">
+                                <path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79s7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.5-9.11 0-12.58 3.51-3.47 9.14-3.49 12.65-.06L21 3v7.12z"/>
+                            </svg>
+                            Windows 更新
+                        </div>
+                    </div>
+                    <div style="flex: 1; padding: 24px; overflow-y: auto;">
+                        <div id="settings-content" style="height: 100%;">
+                            <!-- 系统设置内容 -->
+                            <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">系统</div>
+                            
+                            <div style="display: flex; gap: 24px; margin-bottom: 32px;">
+                                <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                            <path d="M4 8h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M6 12h12M6 16h12" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                        <div>
+                                            <div style="font-size: 16px; font-weight: 600; color: #323130;">显示器</div>
+                                            <div style="font-size: 12px; color: #605e5c;">1 个显示器连接</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 13px; color: #323130;">分辨率</span>
+                                            <span style="font-size: 13px; color: #0078d4;">1920 × 1080</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 13px; color: #323130;">刷新率</span>
+                                            <span style="font-size: 13px; color: #0078d4;">60 Hz</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="font-size: 13px; color: #323130;">缩放</span>
+                                            <span style="font-size: 13px; color: #0078d4;">100%</span>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级显示设置 →</div>
+                                </div>
+                                
+                                <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                            <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
+                                        </svg>
+                                        <div>
+                                            <div style="font-size: 16px; font-weight: 600; color: #323130;">电源和电池</div>
+                                            <div style="font-size: 12px; color: #605e5c;">电池电量：85%</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                        <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                                            <div style="width: 85%; height: 100%; background: linear-gradient(to right, #4CAF50, #8BC34A); border-radius: 4px;"></div>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 13px; color: #323130;">电源模式</span>
+                                            <span style="font-size: 13px; color: #0078d4;">平衡</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="font-size: 13px; color: #323130;">屏幕关闭时间</span>
+                                            <span style="font-size: 13px; color: #0078d4;">15 分钟</span>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 12px; color: #0078d4; cursor: pointer;">电源和睡眠设置 →</div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">系统信息</div>
+                            <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">设备名称</div>
+                                        <div style="font-size: 14px; color: #323130;">DESKTOP-WINDOWS11</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">处理器</div>
+                                        <div style="font-size: 14px; color: #323130;">Intel Core i7-12700H @ 2.30GHz</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">已安装的内存</div>
+                                        <div style="font-size: 14px; color: #323130;">16.0 GB</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">系统类型</div>
+                                        <div style="font-size: 14px; color: #323130;">64 位操作系统，基于 x64 的处理器</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">Windows 规格</div>
+                                        <div style="font-size: 14px; color: #323130;">Windows 11 专业版</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">版本</div>
+                                        <div style="font-size: 14px; color: #323130;">23H2</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">存储</div>
+                            <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-size: 14px; color: #323130;">本地磁盘 (C:)</span>
+                                    <span style="font-size: 12px; color: #605e5c;">256 GB 中的 128 GB 可用</span>
+                                </div>
+                                <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                                    <div style="width: 50%; height: 100%; background: linear-gradient(to right, #0078d4, #50e6ff); border-radius: 4px;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #605e5c;">
+                                    <span>已使用 128 GB</span>
+                                    <span>可用 128 GB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.calc-btn')) {
+                const button = e.target.closest('.calc-btn');
+                const action = button.getAttribute('data-action');
+                const value = button.getAttribute('data-value');
+                handleCalcAction(action, value);
+            }
+            
+            if (e.target.closest('.sidebar-item[data-setting]')) {
+                const setting = e.target.closest('.sidebar-item[data-setting]').getAttribute('data-setting');
+                showSettingsContent(setting);
+            }
+        });
+        
+        function showSettingsContent(setting) {
+            const settingsContent = document.getElementById('settings-content');
+            if (!settingsContent) return;
+            
+            // 更新侧边栏激活状态
+            document.querySelectorAll('.sidebar-item[data-setting]').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-setting') === setting) {
+                    item.classList.add('active');
+                }
+            });
+            
+            let content = '';
+            
+            switch(setting) {
+                case 'system':
+                    content = createSystemSettings();
+                    break;
+                case 'bluetooth':
+                    content = createBluetoothSettings();
+                    break;
+                case 'network':
+                    content = createNetworkSettings();
+                    break;
+                case 'personalization':
+                    content = createPersonalizationSettings();
+                    break;
+                case 'apps':
+                    content = createAppsSettings();
+                    break;
+                case 'accounts':
+                    content = createAccountsSettings();
+                    break;
+                case 'time':
+                    content = createTimeSettings();
+                    break;
+                case 'gaming':
+                    content = createGamingSettings();
+                    break;
+                case 'accessibility':
+                    content = createAccessibilitySettings();
+                    break;
+                case 'privacy':
+                    content = createPrivacySettings();
+                    break;
+                case 'update':
+                    content = createUpdateSettings();
+                    break;
+                default:
+                    content = createSystemSettings();
+            }
+            
+            settingsContent.innerHTML = content;
+        }
+        
+        function createSystemSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">系统</div>
+                
+                <div style="display: flex; gap: 24px; margin-bottom: 32px;">
+                    <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M4 8h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <path d="M6 12h12M6 16h12" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600; color: #323130;">显示器</div>
+                                <div style="font-size: 12px; color: #605e5c;">1 个显示器连接</div>
+                            </div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">分辨率</span>
+                                <span style="font-size: 13px; color: #0078d4;">1920 × 1080</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">刷新率</span>
+                                <span style="font-size: 13px; color: #0078d4;">60 Hz</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 13px; color: #323130;">缩放</span>
+                                <span style="font-size: 13px; color: #0078d4;">100%</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级显示设置 →</div>
+                    </div>
+                    
+                    <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
+                            </svg>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600; color: #323130;">电源和电池</div>
+                                <div style="font-size: 12px; color: #605e5c;">电池电量：85%</div>
+                            </div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                                <div style="width: 85%; height: 100%; background: linear-gradient(to right, #4CAF50, #8BC34A); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">电源模式</span>
+                                <span style="font-size: 13px; color: #0078d4;">平衡</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 13px; color: #323130;">屏幕关闭时间</span>
+                                <span style="font-size: 13px; color: #0078d4;">15 分钟</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">电源和睡眠设置 →</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">系统信息</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">设备名称</div>
+                            <div style="font-size: 14px; color: #323130;">DESKTOP-WINDOWS11</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">处理器</div>
+                            <div style="font-size: 14px; color: #323130;">Intel Core i7-12700H @ 2.30GHz</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">已安装的内存</div>
+                            <div style="font-size: 14px; color: #323130;">16.0 GB</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">系统类型</div>
+                            <div style="font-size: 14px; color: #323130;">64 位操作系统，基于 x64 的处理器</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">Windows 规格</div>
+                            <div style="font-size: 14px; color: #323130;">Windows 11 专业版</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #605e5c; margin-bottom: 4px;">版本</div>
+                            <div style="font-size: 14px; color: #323130;">23H2</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">存储</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 14px; color: #323130;">本地磁盘 (C:)</span>
+                        <span style="font-size: 12px; color: #605e5c;">256 GB 中的 128 GB 可用</span>
+                    </div>
+                    <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                        <div style="width: 50%; height: 100%; background: linear-gradient(to right, #0078d4, #50e6ff); border-radius: 4px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #605e5c;">
+                        <span>已使用 128 GB</span>
+                        <span>可用 128 GB</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createBluetoothSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">蓝牙和设备</div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; color: #323130; margin-bottom: 4px;">蓝牙</div>
+                        <div style="font-size: 14px; color: #605e5c;">发现并连接到其他蓝牙设备</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                        <span style="font-size: 14px; color: #323130;">开</span>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">设备</div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 48px; height: 48px; background: #e3f2fd; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#2196F3">
+                                <path d="M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6zm0-10c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; font-weight: 600; color: #323130;">无线鼠标</div>
+                            <div style="font-size: 12px; color: #605e5c;">已连接</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">断开连接</div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 48px; height: 48px; background: #e8f5e8; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#4CAF50">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; font-weight: 600; color: #323130;">蓝牙耳机</div>
+                            <div style="font-size: 12px; color: #605e5c;">已连接，音频</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">断开连接</div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 48px; height: 48px; background: #fff3e0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF9800">
+                                <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; font-weight: 600; color: #323130;">iPhone 14 Pro</div>
+                            <div style="font-size: 12px; color: #605e5c;">已配对</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">连接</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <div style="padding: 12px 24px; background: #0078d4; color: white; border-radius: 4px; font-size: 14px; cursor: pointer;">添加设备</div>
+                    <div style="padding: 12px 24px; background: rgba(0,120,212,0.1); color: #0078d4; border-radius: 4px; font-size: 14px; cursor: pointer;">设备设置</div>
+                </div>
+            `;
+        }
+        
+        function createNetworkSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">网络和Internet</div>
+                
+                <div style="display: flex; gap: 24px; margin-bottom: 32px;">
+                    <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                            </svg>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600; color: #323130;">WLAN</div>
+                                <div style="font-size: 12px; color: #4CAF50;">已连接</div>
+                            </div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">网络名称</span>
+                                <span style="font-size: 13px; color: #0078d4;">Windows-WiFi-5G</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">信号强度</span>
+                                <span style="font-size: 13px; color: #0078d4;">优秀</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 13px; color: #323130;">安全性</span>
+                                <span style="font-size: 13px; color: #0078d4;">WPA2</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">网络属性 →</div>
+                    </div>
+                    
+                    <div style="flex: 1; background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                            </svg>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600; color: #323130;">以太网</div>
+                                <div style="font-size: 12px; color: #605e5c;">未连接</div>
+                            </div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">IP 地址</span>
+                                <span style="font-size: 13px; color: #605e5c;">未分配</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #323130;">子网掩码</span>
+                                <span style="font-size: 13px; color: #605e5c;">未分配</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 13px; color: #323130;">默认网关</span>
+                                <span style="font-size: 13px; color: #605e5c;">未分配</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">网络属性 →</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">数据使用情况</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 14px; color: #323130;">WLAN</span>
+                        <span style="font-size: 12px; color: #605e5c;">过去 30 天</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 13px; color: #323130;">已发送</span>
+                        <span style="font-size: 13px; color: #0078d4;">2.4 GB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 13px; color: #323130;">已接收</span>
+                        <span style="font-size: 13px; color: #0078d4;">18.7 GB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 13px; color: #323130;">总计</span>
+                        <span style="font-size: 13px; color: #0078d4;">21.1 GB</span>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">可用网络</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">Windows-WiFi-5G</div>
+                            <div style="font-size: 12px; color: #4CAF50;">已连接，安全</div>
+                        </div>
+                        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#4CAF50">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">Neighbor-WiFi</div>
+                            <div style="font-size: 12px; color: #605e5c;">安全</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">连接</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">Guest-Network</div>
+                            <div style="font-size: 12px; color: #605e5c;">开放</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">连接</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createPersonalizationSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">个性化</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">背景</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 120px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 4px; border: 2px solid #0078d4; cursor: pointer;"></div>
+                        <div style="width: 120px; height: 80px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 4px; border: 2px solid transparent; cursor: pointer;"></div>
+                        <div style="width: 120px; height: 80px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 4px; border: 2px solid transparent; cursor: pointer;"></div>
+                        <div style="width: 120px; height: 80px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 4px; border: 2px solid transparent; cursor: pointer;"></div>
+                    </div>
+                    <div style="font-size: 14px; color: #323130; margin-bottom: 8px;">个性化设置</div>
+                    <div style="display: flex; gap: 16px;">
+                        <div style="padding: 8px 16px; background: rgba(0,120,212,0.1); border-radius: 4px; font-size: 13px; color: #0078d4; cursor: pointer;">图片</div>
+                        <div style="padding: 8px 16px; background: rgba(0,0,0,0.03); border-radius: 4px; font-size: 13px; color: #323130; cursor: pointer;">纯色</div>
+                        <div style="padding: 8px 16px; background: rgba(0,0,0,0.03); border-radius: 4px; font-size: 13px; color: #323130; cursor: pointer;">幻灯片放映</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">颜色</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 40px; height: 40px; background: #0078d4; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #0078d4; cursor: pointer;"></div>
+                        <div style="width: 40px; height: 40px; background: #e81123; border-radius: 50%; border: 2px solid transparent; cursor: pointer;"></div>
+                        <div style="width: 40px; height: 40px; background: #107c10; border-radius: 50%; border: 2px solid transparent; cursor: pointer;"></div>
+                        <div style="width: 40px; height: 40px; background: #ff8c00; border-radius: 50%; border: 2px solid transparent; cursor: pointer;"></div>
+                        <div style="width: 40px; height: 40px; background: #881798; border-radius: 50%; border: 2px solid transparent; cursor: pointer;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130; margin-bottom: 4px;">透明效果</div>
+                            <div style="font-size: 12px; color: #605e5c;">使开始菜单和任务栏透明</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">主题</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 120px; height: 80px; background: white; border-radius: 4px; border: 2px solid #0078d4; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="width: 80px; height: 40px; background: #f3f3f3; border-radius: 4px; margin-bottom: 8px;"></div>
+                            <div style="font-size: 12px; color: #323130;">浅色</div>
+                        </div>
+                        <div style="width: 120px; height: 80px; background: #202020; border-radius: 4px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="width: 80px; height: 40px; background: #2d2d2d; border-radius: 4px; margin-bottom: 8px;"></div>
+                            <div style="font-size: 12px; color: white;">深色</div>
+                        </div>
+                        <div style="width: 120px; height: 80px; background: linear-gradient(135deg, #f3f3f3 50%, #202020 50%); border-radius: 4px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 12px; color: #323130;">自定义</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createAppsSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">应用</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">应用列表</div>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; background: #2196F3; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; color: #323130;">Microsoft Edge</div>
+                            <div style="font-size: 12px; color: #605e5c;">Microsoft Corporation</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级选项</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; background: #4CAF50; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; color: #323130;">Office 365</div>
+                            <div style="font-size: 12px; color: #605e5c;">Microsoft Corporation</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级选项</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; background: #FF9800; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; color: #323130;">Visual Studio Code</div>
+                            <div style="font-size: 12px; color: #605e5c;">Microsoft Corporation</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级选项</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">默认应用</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">Web 浏览器</div>
+                            <div style="font-size: 12px; color: #605e5c;">Microsoft Edge</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">电子邮件</div>
+                            <div style="font-size: 12px; color: #605e5c;">邮件</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">地图</div>
+                            <div style="font-size: 12px; color: #605e5c;">地图</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createAccountsSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">账户</div>
+                
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 32px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #0078d4, #50e6ff); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #323130;">Windows 用户</div>
+                        <div style="font-size: 14px; color: #605e5c;">本地账户</div>
+                        <div style="font-size: 14px; color: #605e5c;">管理员</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">账户设置</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+                    <div style="padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">你的信息</div>
+                            <div style="font-size: 12px; color: #605e5c;">更改你的账户图片和名称</div>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">登录选项</div>
+                            <div style="font-size: 12px; color: #605e5c;">Windows Hello、密码、安全密钥</div>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">其他用户</div>
+                            <div style="font-size: 12px; color: #605e5c;">家庭和其他用户</div>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">家庭安全</div>
+                            <div style="font-size: 12px; color: #605e5c;">屏幕时间、内容筛选器、购买限制</div>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#605e5c">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">账户同步</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">同步你的设置</div>
+                            <div style="font-size: 12px; color: #605e5c;">主题、密码、语言首选项</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">企业状态漫游</div>
+                            <div style="font-size: 12px; color: #605e5c;">跨设备同步企业设置</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #e0e0e0; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; left: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createTimeSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">时间和语言</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">日期和时间</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">自动设置时间</div>
+                            <div style="font-size: 12px; color: #605e5c;">使用 Internet 时间服务器</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">自动设置时区</div>
+                            <div style="font-size: 12px; color: #605e5c;">根据你的位置自动调整</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">时区</div>
+                            <div style="font-size: 12px; color: #605e5c;">UTC+08:00 北京，重庆，香港特别行政区，乌鲁木齐</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">语言和地区</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">Windows 显示语言</div>
+                            <div style="font-size: 12px; color: #605e5c;">中文(简体, 中国)</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">首选语言</div>
+                            <div style="font-size: 12px; color: #605e5c;">中文(简体)</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">添加语言</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">区域</div>
+                            <div style="font-size: 12px; color: #605e5c;">中国</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">语音</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">语音语言</div>
+                            <div style="font-size: 12px; color: #605e5c;">中文(简体, 中国)</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">语音识别</div>
+                            <div style="font-size: 12px; color: #605e5c;">使用麦克风进行语音输入</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createGamingSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">游戏</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">Xbox Game Bar</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">启用 Xbox Game Bar</div>
+                            <div style="font-size: 12px; color: #605e5c;">使用 Xbox Game Bar 截取游戏剪辑、截图和广播</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">打开 Xbox Game Bar</div>
+                            <div style="font-size: 12px; color: #605e5c;">按 Win+G 打开 Xbox Game Bar</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改快捷方式</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">游戏模式</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">游戏模式</div>
+                            <div style="font-size: 12px; color: #605e5c;">通过优先处理游戏并阻止其他活动来优化电脑以供游戏使用</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">图形设置</div>
+                            <div style="font-size: 12px; color: #605e5c;">设置图形首选项以提高应用的性能或视觉质量</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改默认图形设置</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">捕获</div>
+                <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">录制选项</div>
+                            <div style="font-size: 12px; color: #605e5c;">录制最后 5 分钟的游戏过程</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">录制的视频质量</div>
+                            <div style="font-size: 12px; color: #605e5c;">标准 (30 fps)</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">捕获的文件位置</div>
+                            <div style="font-size: 12px; color: #605e5c;">C:\\Users\\Windows用户\\Videos\\Captures</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">打开文件夹</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createAccessibilitySettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">辅助功能</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">视觉</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">文本大小</div>
+                            <div style="font-size: 12px; color: #605e5c;">使文本更大，更容易阅读</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">视觉效果</div>
+                            <div style="font-size: 12px; color: #605e5c;">动画、透明效果、滚动条</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">鼠标指针和触摸</div>
+                            <div style="font-size: 12px; color: #605e5c;">更改指针大小和颜色</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">听觉</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">字幕</div>
+                            <div style="font-size: 12px; color: #605e5c;">更改字幕的样式和大小</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">音频</div>
+                            <div style="font-size: 12px; color: #605e5c;">单声道音频、视觉通知</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">交互</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">键盘</div>
+                            <div style="font-size: 12px; color: #605e5c;">粘滞键、筛选键、切换键</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">鼠标</div>
+                            <div style="font-size: 12px; color: #605e5c;">鼠标键、指针速度</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">调整</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">语音识别</div>
+                            <div style="font-size: 12px; color: #605e5c;">使用语音命令控制电脑</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">设置</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createPrivacySettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">隐私和安全性</div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">Windows 安全中心</div>
+                <div style="background: rgba(0,120,212,0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#0078d4">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                        </svg>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 600; color: #323130;">保护区域</div>
+                            <div style="font-size: 12px; color: #4CAF50;">你的设备受到保护</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="background: white; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 13px; color: #323130; margin-bottom: 4px;">病毒和威胁防护</div>
+                            <div style="font-size: 12px; color: #4CAF50;">无操作需要</div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 13px; color: #323130; margin-bottom: 4px;">防火墙和网络保护</div>
+                            <div style="font-size: 12px; color: #4CAF50;">无操作需要</div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 13px; color: #323130; margin-bottom: 4px;">应用和浏览器控制</div>
+                            <div style="font-size: 12px; color: #4CAF50;">无操作需要</div>
+                        </div>
+                        <div style="background: white; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 13px; color: #323130; margin-bottom: 4px;">设备安全性</div>
+                            <div style="font-size: 12px; color: #4CAF50;">无操作需要</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">隐私</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">常规</div>
+                            <div style="font-size: 12px; color: #605e5c;">广告 ID、应用启动追踪</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改隐私选项</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">语音、墨迹书写和键入</div>
+                            <div style="font-size: 12px; color: #605e5c;">语音识别、个性化词典</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">管理数据</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">活动历史记录</div>
+                            <div style="font-size: 12px; color: #605e5c;">时间线、活动上传</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">管理活动数据</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">应用权限</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">位置</div>
+                            <div style="font-size: 12px; color: #605e5c;">允许应用访问你的位置</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">摄像头</div>
+                            <div style="font-size: 12px; color: #605e5c;">允许应用访问你的摄像头</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">麦克风</div>
+                            <div style="font-size: 12px; color: #605e5c;">允许应用访问你的麦克风</div>
+                        </div>
+                        <div style="width: 40px; height: 20px; background: #0078d4; border-radius: 10px; position: relative; cursor: pointer;">
+                            <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createUpdateSettings() {
+            return `
+                <div style="font-size: 28px; font-weight: 300; margin-bottom: 24px; color: #323130;">Windows 更新</div>
+                
+                <div style="background: rgba(0,120,212,0.1); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="#0078d4">
+                            <path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79s7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.5-9.11 0-12.58 3.51-3.47 9.14-3.49 12.65-.06L21 3v7.12z"/>
+                        </svg>
+                        <div>
+                            <div style="font-size: 20px; font-weight: 600; color: #323130; margin-bottom: 4px;">你使用的是最新版本</div>
+                            <div style="font-size: 14px; color: #605e5c;">上次检查时间：今天 09:41</div>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 24px; background: #0078d4; color: white; border-radius: 4px; font-size: 14px; cursor: pointer; display: inline-block;">检查更新</div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">更新历史记录</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-size: 14px; color: #323130;">功能更新</div>
+                            <div style="font-size: 12px; color: #4CAF50;">成功安装</div>
+                        </div>
+                        <div style="font-size: 12px; color: #605e5c;">Windows 11 版本 23H2 (2024年1月1日)</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-size: 14px; color: #323130;">安全更新</div>
+                            <div style="font-size: 12px; color: #4CAF50;">成功安装</div>
+                        </div>
+                        <div style="font-size: 12px; color: #605e5c;">2024-01 累积更新 (KB5034123)</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-size: 14px; color: #323130;">驱动程序更新</div>
+                            <div style="font-size: 12px; color: #4CAF50;">成功安装</div>
+                        </div>
+                        <div style="font-size: 12px; color: #605e5c;">Intel Corporation - 显示适配器 (2024-01-15)</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #323130;">高级选项</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">暂停更新</div>
+                            <div style="font-size: 12px; color: #605e5c;">暂停更新 7 天</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">暂停</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">传递优化</div>
+                            <div style="font-size: 12px; color: #605e5c;">允许从其他电脑下载更新</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">高级选项</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.03); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; color: #323130;">活动时间</div>
+                            <div style="font-size: 12px; color: #605e5c;">设置你不希望电脑重启的时间</div>
+                        </div>
+                        <div style="font-size: 12px; color: #0078d4; cursor: pointer;">更改活动时间</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const calcState = {
+            current: '0',
+            previous: '',
+            operator: null,
+            resetNext: false
+        };
+        
+        function handleCalcAction(action, value) {
+            const currentDisplay = document.getElementById('calc-current');
+            const previousDisplay = document.getElementById('calc-previous');
+            
+            switch(action) {
+                case 'number':
+                    if (calcState.resetNext) {
+                        calcState.current = value;
+                        calcState.resetNext = false;
+                    } else {
+                        if (calcState.current === '0' && value !== '.') {
+                            calcState.current = value;
+                        } else {
+                            calcState.current += value;
+                        }
+                    }
+                    break;
+                    
+                case 'decimal':
+                    if (calcState.resetNext) {
+                        calcState.current = '0.';
+                        calcState.resetNext = false;
+                    } else if (!calcState.current.includes('.')) {
+                        calcState.current += '.';
+                    }
+                    break;
+                    
+                case 'operator':
+                    if (calcState.operator && !calcState.resetNext) {
+                        calculate();
+                    }
+                    calcState.previous = calcState.current;
+                    calcState.operator = value;
+                    calcState.resetNext = true;
+                    previousDisplay.textContent = `${calcState.previous} ${getOperatorSymbol(value)}`;
+                    break;
+                    
+                case 'equals':
+                    if (calcState.operator) {
+                        calculate();
+                        calcState.operator = null;
+                        previousDisplay.textContent = '';
+                    }
+                    break;
+                    
+                case 'clear':
+                    calcState.current = '0';
+                    calcState.previous = '';
+                    calcState.operator = null;
+                    calcState.resetNext = false;
+                    previousDisplay.textContent = '';
+                    break;
+                    
+                case 'backspace':
+                    if (calcState.current.length > 1) {
+                        calcState.current = calcState.current.slice(0, -1);
+                    } else {
+                        calcState.current = '0';
+                    }
+                    break;
+                    
+                case 'toggle-sign':
+                    if (calcState.current !== '0') {
+                        if (calcState.current.startsWith('-')) {
+                            calcState.current = calcState.current.slice(1);
+                        } else {
+                            calcState.current = '-' + calcState.current;
+                        }
+                    }
+                    break;
+                    
+                case 'percent':
+                    calcState.current = (parseFloat(calcState.current) / 100).toString();
+                    break;
+            }
+            
+            if (currentDisplay) {
+                currentDisplay.textContent = calcState.current;
+            }
+        }
+        
+        function calculate() {
+            const current = parseFloat(calcState.current);
+            const previous = parseFloat(calcState.previous);
+            
+            if (isNaN(previous)) return;
+            
+            let result;
+            switch(calcState.operator) {
+                case '+':
+                    result = previous + current;
+                    break;
+                case '-':
+                    result = previous - current;
+                    break;
+                case '*':
+                    result = previous * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        result = '错误';
+                    } else {
+                        result = previous / current;
+                    }
+                    break;
+            }
+            
+            if (result === '错误') {
+                calcState.current = '错误';
+            } else {
+                calcState.current = parseFloat(result.toFixed(10)).toString();
+            }
+            
+            calcState.resetNext = true;
+        }
+        
+        function getOperatorSymbol(operator) {
+            switch(operator) {
+                case '+': return '+';
+                case '-': return '−';
+                case '*': return '×';
+                case '/': return '÷';
+                default: return operator;
+            }
+        }
+    </script>
+</body>
+</html>
