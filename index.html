@@ -158,6 +158,11 @@
           <input type="text" id="config-model" placeholder="gpt-4o">
         </div>
 
+        <div class="form-group">
+          <label for="config-extra-body">Extra Body <span style="font-weight:400;color:var(--text-secondary)">— JSON，将合并到请求体中</span></label>
+          <textarea id="config-extra-body" placeholder='{"enable_thinking": true}' rows="3" autocomplete="off"></textarea>
+        </div>
+
         <div class="presets">
           <span class="presets-label">快捷预设：</span>
           <button class="preset-btn" data-name="OpenAI" data-base-url="https://api.openai.com/v1" data-model="gpt-4o">OpenAI</button>

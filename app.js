@@ -7,7 +7,8 @@ const STORAGE_KEY = 'llm_config';
 const DEFAULT_CONFIG = {
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
-  model: 'gpt-4o'
+  model: 'gpt-4o',
+  extraBody: ''
 };
 
 function _generateId() {
@@ -113,6 +114,7 @@ function loadConfigToForm(id) {
   const apiKeyInput = document.getElementById('config-api-key');
   const baseUrlInput = document.getElementById('config-base-url');
   const modelInput = document.getElementById('config-model');
+  const extraBodyInput = document.getElementById('config-extra-body');
   const deleteBtn = document.getElementById('config-delete');
   const setActiveBtn = document.getElementById('config-set-active');
 
@@ -122,6 +124,7 @@ function loadConfigToForm(id) {
     apiKeyInput.value = '';
     baseUrlInput.value = '';
     modelInput.value = '';
+    extraBodyInput.value = '';
     deleteBtn.disabled = true;
     setActiveBtn.disabled = true;
     setActiveBtn.textContent = '设为当前';
@@ -136,6 +139,7 @@ function loadConfigToForm(id) {
   apiKeyInput.value = config.apiKey;
   baseUrlInput.value = config.baseUrl;
   modelInput.value = config.model;
+  extraBodyInput.value = config.extraBody || '';
 
   deleteBtn.disabled = false;
   const isActive = id === getConfigData().activeId;
@@ -196,6 +200,7 @@ function handleSaveConfig() {
   const apiKey = document.getElementById('config-api-key').value.trim();
   const baseUrl = document.getElementById('config-base-url').value.trim() || DEFAULT_CONFIG.baseUrl;
   const model = document.getElementById('config-model').value.trim() || DEFAULT_CONFIG.model;
+  const extraBody = document.getElementById('config-extra-body').value.trim();
 
   const data = getConfigData();
 
@@ -206,9 +211,10 @@ function handleSaveConfig() {
       config.apiKey = apiKey;
       config.baseUrl = baseUrl;
       config.model = model;
+      config.extraBody = extraBody;
     }
   } else {
-    const newConfig = { id: _generateId(), name, apiKey, baseUrl, model };
+    const newConfig = { id: _generateId(), name, apiKey, baseUrl, model, extraBody };
     data.configs.push(newConfig);
     _editingId = newConfig.id;
     if (data.configs.length === 1) {
@@ -233,6 +239,7 @@ function handlePresetClick(e) {
   }
   document.getElementById('config-base-url').value = btn.dataset.baseUrl;
   document.getElementById('config-model').value = btn.dataset.model;
+  document.getElementById('config-extra-body').value = btn.dataset.extraBody || '';
 
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -352,6 +359,15 @@ async function streamGenerate(messages, onChunk) {
 
   const url = `${config.baseUrl.replace(/\/+$/, '')}/chat/completions`;
 
+  let extraBody = {};
+  if (config.extraBody) {
+    try {
+      extraBody = JSON.parse(config.extraBody);
+    } catch (e) {
+      throw new Error('Extra Body JSON 格式无效，请在设置中检查');
+    }
+  }
+
   let response;
   try {
     response = await fetch(url, {
@@ -363,7 +379,8 @@ async function streamGenerate(messages, onChunk) {
       body: JSON.stringify({
         model: config.model,
         messages: messages,
-        stream: true
+        stream: true,
+        ...extraBody
       })
     });
   } catch (err) {
