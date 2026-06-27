@@ -653,6 +653,57 @@ body {
   color: var(--text-secondary);
 }
 
+/* ===== Temperature Slider ===== */
+.temp-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.temp-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.temp-slider-row input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.temp-slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-secondary);
+  box-shadow: 0 0 6px var(--accent-glow);
+  transition: transform 0.15s ease;
+}
+
+.temp-slider-row input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.temp-slider-row input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-secondary);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
 /* ===== Presets ===== */
 .presets {
   margin: 16px 0;

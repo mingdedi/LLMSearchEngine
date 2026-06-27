@@ -8,6 +8,7 @@ const DEFAULT_CONFIG = {
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
   model: 'gpt-4o',
+  temperature: 0.7,
   extraBody: ''
 };
 
@@ -109,11 +110,16 @@ function refreshConfigSelect() {
   select.appendChild(newOpt);
 }
 
+function updateTempDisplay(val) {
+  document.getElementById('temp-value-display').textContent = parseFloat(val).toFixed(2);
+}
+
 function loadConfigToForm(id) {
   const nameInput = document.getElementById('config-name');
   const apiKeyInput = document.getElementById('config-api-key');
   const baseUrlInput = document.getElementById('config-base-url');
   const modelInput = document.getElementById('config-model');
+  const tempInput = document.getElementById('config-temperature');
   const extraBodyInput = document.getElementById('config-extra-body');
   const deleteBtn = document.getElementById('config-delete');
   const setActiveBtn = document.getElementById('config-set-active');
@@ -124,6 +130,8 @@ function loadConfigToForm(id) {
     apiKeyInput.value = '';
     baseUrlInput.value = '';
     modelInput.value = '';
+    tempInput.value = 0.7;
+    updateTempDisplay(0.7);
     extraBodyInput.value = '';
     deleteBtn.disabled = true;
     setActiveBtn.disabled = true;
@@ -139,6 +147,8 @@ function loadConfigToForm(id) {
   apiKeyInput.value = config.apiKey;
   baseUrlInput.value = config.baseUrl;
   modelInput.value = config.model;
+  tempInput.value = config.temperature ?? 0.7;
+  updateTempDisplay(config.temperature ?? 0.7);
   extraBodyInput.value = config.extraBody || '';
 
   deleteBtn.disabled = false;
@@ -200,6 +210,7 @@ function handleSaveConfig() {
   const apiKey = document.getElementById('config-api-key').value.trim();
   const baseUrl = document.getElementById('config-base-url').value.trim() || DEFAULT_CONFIG.baseUrl;
   const model = document.getElementById('config-model').value.trim() || DEFAULT_CONFIG.model;
+  const temperature = parseFloat(document.getElementById('config-temperature').value) || DEFAULT_CONFIG.temperature;
   const extraBody = document.getElementById('config-extra-body').value.trim();
 
   const data = getConfigData();
@@ -211,10 +222,11 @@ function handleSaveConfig() {
       config.apiKey = apiKey;
       config.baseUrl = baseUrl;
       config.model = model;
+      config.temperature = temperature;
       config.extraBody = extraBody;
     }
   } else {
-    const newConfig = { id: _generateId(), name, apiKey, baseUrl, model, extraBody };
+    const newConfig = { id: _generateId(), name, apiKey, baseUrl, model, temperature, extraBody };
     data.configs.push(newConfig);
     _editingId = newConfig.id;
     if (data.configs.length === 1) {
@@ -239,6 +251,10 @@ function handlePresetClick(e) {
   }
   document.getElementById('config-base-url').value = btn.dataset.baseUrl;
   document.getElementById('config-model').value = btn.dataset.model;
+  if (btn.dataset.temperature) {
+    document.getElementById('config-temperature').value = btn.dataset.temperature;
+    updateTempDisplay(btn.dataset.temperature);
+  }
   document.getElementById('config-extra-body').value = btn.dataset.extraBody || '';
 
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -378,6 +394,7 @@ async function streamGenerate(messages, onChunk) {
       },
       body: JSON.stringify({
         model: config.model,
+        temperature: config.temperature,
         messages: messages,
         stream: true,
         ...extraBody
@@ -721,6 +738,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelector('.presets').addEventListener('click', handlePresetClick);
+
+  document.getElementById('config-temperature').addEventListener('input', (e) => {
+    updateTempDisplay(e.target.value);
+  });
 
   document.getElementById('settings-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeSettings();
