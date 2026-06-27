@@ -407,6 +407,8 @@ async function streamGenerate(messages, onChunk) {
   const decoder = new TextDecoder();
   let buffer = '';
   let inCodeBlock = false;
+  let htmlStarted = false;
+  let preBuffer = '';
 
   while (true) {
     const { done, value } = await reader.read();
@@ -441,7 +443,17 @@ async function streamGenerate(messages, onChunk) {
           }
         }
 
-        if (cleaned) {
+        if (!cleaned) continue;
+
+        if (!htmlStarted) {
+          preBuffer += cleaned;
+          const marker = preBuffer.match(/<!DOCTYPE\s+html|<html[\s>]/i);
+          if (marker) {
+            htmlStarted = true;
+            onChunk(preBuffer.slice(marker.index));
+            preBuffer = '';
+          }
+        } else {
           onChunk(cleaned);
         }
       } catch (_) {
